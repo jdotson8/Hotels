@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.text.*?>
+<?import java.lang.*?>
+<?import java.util.*?>
+<?import javafx.scene.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<AnchorPane id="AnchorPane" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="hotels.UserRegistrationViewController">
+   <children>
+      <Label layoutX="241.0" layoutY="14.0" text="New User Registration">
+         <font>
+            <Font size="16.0" />
+         </font>
+      </Label>
+      <TextField fx:id="usernameField" layoutX="250.0" layoutY="102.0" />
+      <Label layoutX="189.0" layoutY="106.0" text="Username:" />
+      <PasswordField fx:id="passwordField" layoutX="250.0" layoutY="140.0" />
+      <Label layoutX="191.0" layoutY="144.0" text="Password:" />
+      <PasswordField fx:id="confirmPasswordField" layoutX="250.0" layoutY="176.0" />
+      <Label layoutX="146.0" layoutY="180.0" text="Confirm Password:" />
+      <TextField fx:id="emialField" layoutX="250.0" layoutY="215.0" />
+      <Label layoutX="213.0" layoutY="219.0" text="Email:" />
+      <Button fx:id="submitButton" layoutX="333.0" layoutY="274.0" mnemonicParsing="false" onAction="#submitHandler" text="Submit" />
+      <Button fx:id="cancelButton" layoutX="250.0" layoutY="274.0" mnemonicParsing="false" onAction="#cancelHandler" text="Cancel" />
+      <Label fx:id="errorLabel" layoutX="250.0" layoutY="247.0" text="Error message." textFill="RED" />
+   </children>
+</AnchorPane>

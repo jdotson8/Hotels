@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.text.*?>
+<?import java.lang.*?>
+<?import java.util.*?>
+<?import javafx.scene.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<AnchorPane id="AnchorPane" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="hotels.CustomerMenuViewController">
+   <children>
+      <Label fx:id="welcomeLabel" layoutX="51.0" layoutY="55.0" text="Welcome USER," />
+      <Label layoutX="260.0" layoutY="14.0" text="Main Menu">
+         <font>
+            <Font size="16.0" />
+         </font>
+      </Label>
+      <Button fx:id="makeResButton" layoutX="75.0" layoutY="120.0" mnemonicParsing="false" onAction="#makeResHandler" text="Make Reservation" />
+      <Button fx:id="updateResButton" layoutX="75.0" layoutY="155.0" mnemonicParsing="false" onAction="#updateResHandler" text="Update Reservation" />
+      <Button fx:id="cancelResButton" layoutX="77.0" layoutY="191.0" mnemonicParsing="false" onAction="#cancelResHandler" text="Cancel Reservation" />
+      <Button fx:id="createReviewButton" layoutX="77.0" layoutY="223.0" mnemonicParsing="false" onAction="#createReviewHandler" text="Create Review" />
+      <Button fx:id="readReviewsButton" layoutX="78.0" layoutY="257.0" mnemonicParsing="false" onAction="#readReviewsHandler" text="Read Reviews" />
+   </children>
+</AnchorPane>

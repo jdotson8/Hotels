@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.text.*?>
+<?import java.lang.*?>
+<?import java.util.*?>
+<?import javafx.scene.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+
+<AnchorPane id="AnchorPane" prefHeight="400.0" prefWidth="600.0" xmlns:fx="http://javafx.com/fxml/1" xmlns="http://javafx.com/javafx/8" fx:controller="hotels.ConfirmationViewController">
+   <children>
+      <Label layoutX="65.0" layoutY="99.0" text="Your Reservation ID:" />
+      <Label layoutX="183.0" layoutY="99.0" text="ID" />
+      <Label layoutX="228.0" layoutY="14.0" text="Confirmation Screen">
+         <font>
+            <Font size="16.0" />
+         </font>
+      </Label>
+      <Button layoutX="150.0" layoutY="123.0" mnemonicParsing="false" text="Menu" />
+   </children>
+</AnchorPane>
