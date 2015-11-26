@@ -15,6 +15,10 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.ResourceBundle;
+import java.util.concurrent.Callable;
+import javafx.beans.Observable;
+import javafx.beans.binding.Bindings;
+import javafx.beans.binding.BooleanBinding;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.IntegerProperty;
@@ -34,12 +38,15 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.DateCell;
 import javafx.scene.control.DatePicker;
+import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TableView.TableViewSelectionModel;
 import javafx.scene.control.cell.CheckBoxTableCell;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.util.Callback;
+import javafx.util.StringConverter;
 
 /**
  * FXML Controller class
@@ -63,7 +70,7 @@ public class MakeReservationViewController implements ScreenController, Initiali
                     + "Start_Date >= '%2$s' AND End_Date <= '%3$s'));";
     
     @FXML
-    private ComboBox locationSelect;
+    private ComboBox<String> locationSelect;
     
     @FXML
     private DatePicker startDateSelect;
@@ -72,7 +79,7 @@ public class MakeReservationViewController implements ScreenController, Initiali
     private DatePicker endDateSelect;
     
     @FXML
-    private Button searchRoomsButton;
+    private Button searchButton;
     
     @FXML
     private TableView availableRoomsTable;
@@ -95,9 +102,12 @@ public class MakeReservationViewController implements ScreenController, Initiali
     @FXML
     private TableColumn selectColumn;
     
+    @FXML
+    private Button nextButton;
+    
     private ScreenManager manager;
-    private ObservableList availableLocations;
-    private ObservableList availableRooms;
+    private ObservableList<String> availableLocations;
+    private ObservableList<Room> availableRooms;
     
     private Service<List<String>> locationsService = new Service<List<String>>() {
         @Override
@@ -121,13 +131,21 @@ public class MakeReservationViewController implements ScreenController, Initiali
     
     private class SearchService extends Service<List<Room>> {
         private String location;
-        private String startDate;
-        private String endDate;
+        private LocalDate startDate;
+        private LocalDate endDate;
         
-        public void setSearchInfo(String location, String startDate, String endDate) {
+        public void setSearchInfo(String location, LocalDate startDate, LocalDate endDate) {
             this.location = location;
             this.startDate = startDate;
             this.endDate = endDate;
+        }
+        
+        public LocalDate getStartDate() {
+            return startDate;
+        }
+        
+        public LocalDate getEndDate() {
+            return endDate;
         }
         
         @Override
@@ -135,13 +153,15 @@ public class MakeReservationViewController implements ScreenController, Initiali
             return new Task<List<Room>>() {
                 @Override
                 protected List<Room> call() throws Exception {
+                    String start = startDate.format(DateTimeFormatter.ISO_DATE);
+                    String end = endDate.format(DateTimeFormatter.ISO_DATE);
                     Connection con = manager.openConnection();
                     Statement s = con.createStatement();
                     String query = String.format(roomSearchQuery, location, startDate, endDate);
                     ResultSet rs = s.executeQuery(query);
                     List<Room> rooms = new ArrayList<>();
                     while (rs.next()) {
-                        rooms.add(new Room(rs.getInt(1), rs.getString(2), rs.getInt(3), rs.getDouble(4), 0));
+                        rooms.add(new Room(rs.getInt(1), rs.getString(2), rs.getInt(3), rs.getDouble(4), 5));
                     }
                     return rooms;
                 }
@@ -155,17 +175,26 @@ public class MakeReservationViewController implements ScreenController, Initiali
         if (startDateSelect.getValue() == null && endDateSelect.getValue() == null) {
             //Nothing for now.
         } else {
-            String location = (String) locationSelect.getValue();
-            String startDate = startDateSelect.getValue().format(DateTimeFormatter.ISO_DATE);
-            String endDate = endDateSelect.getValue().format(DateTimeFormatter.ISO_DATE);
-            searchService.setSearchInfo(location, startDate, endDate);
+            searchService.setSearchInfo(locationSelect.getValue(), startDateSelect.getValue(), endDateSelect.getValue());
             searchService.restart();
         }
     }
     
     @FXML
-    private void backHandler(ActionEvent event) {
-        manager.setScreen("CustomerMenuView");
+    private void cancelHandler(ActionEvent event) {
+        manager.setScreen("CustomerMenuView", null);
+    }
+    
+    @FXML
+    private void nextHandler(ActionEvent event) {
+        List<Room> selected = new ArrayList<>();
+        for (Room room : availableRooms) {
+            if (room.isSelected()) {
+                selected.add(room.copy());
+            }
+        }
+        manager.setPartialReservation(new Reservation(searchService.getStartDate(), searchService.getEndDate(), selected));
+        manager.setScreen("ReservationDetailsView", null);
     }
 
     /**
@@ -209,6 +238,22 @@ public class MakeReservationViewController implements ScreenController, Initiali
         dailyCostColumn.setCellValueFactory(new PropertyValueFactory<>("dailyCost"));
         extraBedColumn.setCellValueFactory(new PropertyValueFactory<>("extraBedCost"));
         selectColumn.setCellValueFactory(new PropertyValueFactory<>("selected"));
+        
+        StringConverter<Double> currencyConverter = new StringConverter<Double>() {
+            private final NumberFormat currencyFormat = NumberFormat.getCurrencyInstance();
+            @Override
+            public String toString(Double object) {
+                return currencyFormat.format(object);
+            }
+            @Override
+            public Double fromString(String string) {
+                //Nothing
+                return null;
+            }
+        };
+        
+        dailyCostColumn.setCellFactory(TextFieldTableCell.<Room, Double>forTableColumn(currencyConverter));
+        extraBedColumn.setCellFactory(TextFieldTableCell.<Room, Double>forTableColumn(currencyConverter));
         selectColumn.setCellFactory(CheckBoxTableCell.forTableColumn(selectColumn));
         
         availableLocations = FXCollections.observableArrayList();
@@ -218,26 +263,46 @@ public class MakeReservationViewController implements ScreenController, Initiali
         });
         
         searchService.setOnSucceeded((final WorkerStateEvent event) -> {
-            availableRooms.setAll((List<Room>)event.getSource().getValue());
+            List<Room> rooms = (List<Room>)event.getSource().getValue();
+            availableRooms.setAll(rooms);
+            Observable[] dependencies = new BooleanProperty[rooms.size()];
+            for (int i = 0; i < dependencies.length; i++) {
+                dependencies[i] = rooms.get(i).selectedProperty();
+            }
+            nextButton.disableProperty().bind(Bindings.createBooleanBinding(new Callable<Boolean>() {
+                @Override
+                public Boolean call() throws Exception {
+                    boolean selected = false;
+                    for (Room room : availableRooms) {
+                        if (room.isSelected()) {
+                            selected = true;
+                            break;
+                        }
+                    }
+                    return !selected;
+                }
+            }, dependencies));
         });
         
         searchService.setOnFailed((final WorkerStateEvent event) -> {
             System.out.println(searchService.getException().getMessage());
         });
         
+        searchButton.disableProperty().bind(Bindings.createBooleanBinding(new Callable<Boolean>() {
+            @Override
+            public Boolean call() throws Exception {
+                return locationSelect.getValue() == null ||
+                        startDateSelect.getValue() == null ||
+                        endDateSelect.getValue() == null;
+            }
+        }, locationSelect.valueProperty(), startDateSelect.valueProperty(), endDateSelect.valueProperty()));
+        
         locationSelect.setItems(availableLocations);
         availableRoomsTable.setItems(availableRooms);
-        
-        /*availableRoomsTableableTable.setItems(FXCollections.observableArrayList(
-            new Room(101, "Traditional", 2, 500, 10),
-            new Room(102, "Suite", 4, 1000, 10),
-            new Room(103, "Family", 6, 1500, 10),
-            new Room(104, "Suite", 4, 500, 10)
-        ));*/
     }    
 
     @Override
-    public void onSet() {
+    public void onSet(List arguments) {
         locationsService.restart();
     }
     

@@ -7,34 +7,30 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-
-<AnchorPane id="AnchorPane" prefHeight="400.0" prefWidth="600.0" xmlns:fx="http://javafx.com/fxml/1" xmlns="http://javafx.com/javafx/8" fx:controller="hotels.ReservationDetailsViewController">
+<AnchorPane id="AnchorPane" prefHeight="400.0" prefWidth="956.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="hotels.ReservationDetailsViewController">
    <children>
-      <TableView layoutX="48.0" layoutY="57.0" prefHeight="116.0" prefWidth="505.0">
-        <columns>
-          <TableColumn prefWidth="67.2176513671875" text="Room #" />
-          <TableColumn prefWidth="67.02386474609375" text="Type" />
-            <TableColumn prefWidth="66.8807373046875" text="Capacity" />
-            <TableColumn prefWidth="85.3734130859375" text="Daily Cost" />
-            <TableColumn prefWidth="140.927490234375" text="Daily Extra Bed Cost" />
-            <TableColumn prefWidth="75.0" text="Extra Bed" />
-        </columns>
-         <columnResizePolicy>
-            <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
-         </columnResizePolicy>
-      </TableView>
-      <Label layoutX="233.0" layoutY="14.0" text="Reservation Details">
+      <Label layoutX="33.0" layoutY="14.0" text="Reservation Details">
          <font>
             <Font size="16.0" />
          </font>
       </Label>
-      <Label layoutX="49.0" layoutY="200.0" text="Start Date: DATE" />
-      <Label layoutX="48.0" layoutY="225.0" text="End Date: DATE" />
-      <Label layoutX="49.0" layoutY="272.0" text="Total Cost: COST" />
-      <Label layoutX="49.0" layoutY="248.0" text="Length of Stay: DAYS" />
+      <Label fx:id="startDateLabel" layoutX="49.0" layoutY="200.0" text="Start Date: DATE" />
+      <Label fx:id="endDateLabel" layoutX="48.0" layoutY="225.0" text="End Date: DATE" />
+      <Label fx:id="totalCostLabel" layoutX="49.0" layoutY="272.0" text="Total Cost: COST" />
+      <Label fx:id="lengthOfStayLabel" layoutX="49.0" layoutY="248.0" text="Length of Stay: DAYS" />
       <ChoiceBox layoutX="105.0" layoutY="298.0" prefWidth="150.0" />
       <Label layoutX="49.0" layoutY="302.0" text="Use Card:" />
-      <Button layoutX="261.0" layoutY="298.0" mnemonicParsing="false" text="Add Card" />
-      <Button layoutX="516.0" layoutY="355.0" mnemonicParsing="false" text="Submit" />
+      <Button layoutX="261.0" layoutY="298.0" mnemonicParsing="false" onAction="#addCardHandler" text="Add Card" />
+      <Button fx:id="confirmationButton" layoutX="827.0" layoutY="361.0" mnemonicParsing="false" onAction="#confirmationHandler" text="Confirm Payment" />
+      <TableView fx:id="selectedRoomsTable" editable="true" layoutX="34.0" layoutY="50.0" prefHeight="142.0" prefWidth="888.0">
+         <columns>
+            <TableColumn fx:id="roomNumberColumn" prefWidth="159.0" resizable="false" text="Room Number" />
+            <TableColumn fx:id="typeColumn" minWidth="0.0" prefWidth="162.0" resizable="false" text="Type" />
+            <TableColumn fx:id="capacityColumn" prefWidth="124.0" resizable="false" text="Capacity" />
+            <TableColumn fx:id="dailyCostColumn" minWidth="0.0" prefWidth="141.0" resizable="false" text="Daily Cost" />
+            <TableColumn fx:id="extraBedColumn" prefWidth="181.0" resizable="false" text="Daily Extra Bed Cost" />
+            <TableColumn fx:id="selectColumn" minWidth="0.0" prefWidth="117.0" resizable="false" text="Extra Bed" />
+         </columns>
+      </TableView>
    </children>
 </AnchorPane>

@@ -6,6 +6,7 @@
 package hotels;
 
 import java.net.URL;
+import java.util.List;
 import java.util.ResourceBundle;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -41,12 +42,12 @@ public class CustomerMenuViewController implements ScreenController, Initializab
     
     @FXML
     private void makeResHandler(ActionEvent event) {
-        manager.setScreen("MakeReservationView");
+        manager.setScreen("MakeReservationView", null);
     }
     
     @FXML
     private void updateResHandler(ActionEvent event) {
-        manager.setScreen("MakeReservationView");
+        manager.setScreen("MakeReservationView", null);
     }
     @FXML
     private void cancelResHandler(ActionEvent event) {
@@ -72,7 +73,7 @@ public class CustomerMenuViewController implements ScreenController, Initializab
     }    
 
     @Override
-    public void onSet() {
+    public void onSet(List arguments) {
         welcomeLabel.setText(String.format("Welcome %s,", manager.getUser().getUsername()));
     }
 

@@ -5,12 +5,14 @@
  */
 package hotels;
 
+import java.util.List;
+
 /**
  *
  * @author Administrator
  */
 public interface ScreenController {
-    public void onSet();
+    public void onSet(List arguments);
     public void cleanUp();
     public void setManager(ScreenManager manager);
 }

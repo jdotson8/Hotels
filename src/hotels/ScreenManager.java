@@ -84,6 +84,7 @@ public class ScreenManager extends AnimationTimer {
     private double aspectRatio;
     
     private User user;
+    private Reservation partialReservation;
     
     private Service<Image> nextLoader = new Service() {
         @Override
@@ -213,14 +214,15 @@ public class ScreenManager extends AnimationTimer {
             controllers.put(name, controller);
         } catch (IOException ex) {
             System.err.println(ex.getMessage());
+            ex.printStackTrace();
         }
     }
     
-    public void setScreen(String name) {
+    public void setScreen(String name, List arguments) {
         Pane nextScreen = screens.get(name);
         ScreenController controller = controllers.get(name);
         if (nextScreen != null && controller != null) {
-            controller.onSet();
+            controller.onSet(arguments);
             if (!screenPane.getChildren().isEmpty()) {
                 screenPane.getChildren().get(0).setDisable(true);
                 Timeline fadeIn = new Timeline(
@@ -274,6 +276,14 @@ public class ScreenManager extends AnimationTimer {
     
     public void login(User user) {
         this.user = user;
+    }
+    
+    public void setPartialReservation(Reservation partialReservation) {
+        this.partialReservation = partialReservation;
+    }
+    
+    public Reservation getPartialReservation() {
+        return partialReservation;
     }
     
     public User getUser() {

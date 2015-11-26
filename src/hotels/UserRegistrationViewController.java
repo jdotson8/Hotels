@@ -6,6 +6,7 @@
 package hotels;
 
 import java.net.URL;
+import java.util.List;
 import java.util.ResourceBundle;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -46,7 +47,7 @@ public class UserRegistrationViewController implements ScreenController, Initial
     
     @FXML
     private void cancelHandler(ActionEvent event) {
-        manager.setScreen("LoginView");
+        manager.setScreen("LoginView", null);
     }
     
     @FXML
@@ -55,7 +56,7 @@ public class UserRegistrationViewController implements ScreenController, Initial
     }
     
     @Override
-    public void onSet() {
+    public void onSet(List arguments) {
         //TODO
     }
     

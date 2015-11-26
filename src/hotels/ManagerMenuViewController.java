@@ -6,6 +6,7 @@
 package hotels;
 
 import java.net.URL;
+import java.util.List;
 import java.util.ResourceBundle;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -58,7 +59,7 @@ public class ManagerMenuViewController implements ScreenController, Initializabl
     }    
 
     @Override
-    public void onSet() {
+    public void onSet(List arguments) {
         welcomeLabel.setText(String.format("Welcome %s,", manager.getUser().getUsername()));
     }
     

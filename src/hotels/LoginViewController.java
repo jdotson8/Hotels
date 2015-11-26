@@ -11,6 +11,7 @@ import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.List;
 import java.util.ResourceBundle;
 import javafx.concurrent.Service;
 import javafx.concurrent.Task;
@@ -108,7 +109,7 @@ public class LoginViewController implements ScreenController, Initializable {
     
     @FXML
     private void newUserHandler(ActionEvent event) {
-        manager.setScreen("UserRegistrationView");
+        manager.setScreen("UserRegistrationView", null);
     }
     
     @Override
@@ -119,7 +120,7 @@ public class LoginViewController implements ScreenController, Initializable {
             passwordField.setText("");
             manager.setScreen((manager.getUser().isManager()) ?
                     "ManagerMenuView" :
-                    "CustomerMenuView");
+                    "CustomerMenuView", null);
         });
         
         loginService.setOnFailed((final WorkerStateEvent event) -> {
@@ -130,7 +131,7 @@ public class LoginViewController implements ScreenController, Initializable {
     }
     
     @Override
-    public void onSet() {
+    public void onSet(List arguments) {
         //Nothing
     }
     

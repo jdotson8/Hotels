@@ -7,8 +7,10 @@ package hotels;
 
 import java.text.NumberFormat;
 import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
@@ -17,17 +19,16 @@ public class Room {
         IntegerProperty roomNumber;
         StringProperty type;
         IntegerProperty capacity;
-        StringProperty dailyCost;
-        StringProperty extraBedCost;
+        DoubleProperty dailyCost;
+        DoubleProperty extraBedCost;
         BooleanProperty selected;
         
         public Room(int roomNumber, String type, int capacity, double dailyCost, double extraBedCost) {
             this.roomNumber = new SimpleIntegerProperty(roomNumber);
             this.type = new SimpleStringProperty(type);
             this.capacity = new SimpleIntegerProperty(capacity);
-            NumberFormat cost = NumberFormat.getCurrencyInstance();
-            this.dailyCost = new SimpleStringProperty(cost.format(dailyCost));
-            this.extraBedCost = new SimpleStringProperty(cost.format(extraBedCost));
+            this.dailyCost = new SimpleDoubleProperty(dailyCost);
+            this.extraBedCost = new SimpleDoubleProperty(extraBedCost);
             selected = new SimpleBooleanProperty(false);
         }
         
@@ -43,15 +44,31 @@ public class Room {
             return capacity;
         }
         
-        public StringProperty dailyCostProperty() {
+        public DoubleProperty dailyCostProperty() {
             return dailyCost;
         }
         
-        public StringProperty extraBedCostProperty() {
+        public DoubleProperty extraBedCostProperty() {
             return extraBedCost;
         }
         
         public BooleanProperty selectedProperty() {
             return selected;
+        }
+        
+        public boolean isSelected() {
+            return selected.getValue();
+        }
+        
+        public double getDailyCost() {
+            return dailyCost.getValue();
+        }
+        
+        public double getExtraBedCost() {
+            return extraBedCost.getValue();
+        }
+        
+        public Room copy() {
+            return new Room(roomNumber.getValue(), type.getValue(), capacity.getValue(), dailyCost.getValue(), extraBedCost.getValue());
         }
     }
