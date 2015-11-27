@@ -60,7 +60,7 @@ public class ManagerMenuViewController implements ScreenController, Initializabl
 
     @Override
     public void onSet(List arguments) {
-        welcomeLabel.setText(String.format("Welcome %s,", manager.getUser().getUsername()));
+        welcomeLabel.setText(String.format("Welcome %s,", manager.getUserUsername()));
     }
     
     @Override

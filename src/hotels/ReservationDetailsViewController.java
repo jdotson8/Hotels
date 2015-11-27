@@ -6,39 +6,39 @@
 package hotels;
 
 import java.net.URL;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.Statement;
 import java.text.NumberFormat;
+import java.time.LocalDate;
 import java.time.Period;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.ResourceBundle;
-import java.util.concurrent.Callable;
-import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.DoubleBinding;
-import javafx.beans.binding.IntegerBinding;
-import javafx.beans.binding.StringBinding;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.DoubleProperty;
-import javafx.beans.property.ListProperty;
 import javafx.beans.property.SimpleDoubleProperty;
-import javafx.beans.property.SimpleListProperty;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.concurrent.Service;
+import javafx.concurrent.Task;
+import javafx.concurrent.WorkerStateEvent;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
-import javafx.scene.control.DatePicker;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.cell.CheckBoxTableCell;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.control.cell.TextFieldTableCell;
+import javafx.scene.layout.Pane;
 import javafx.util.StringConverter;
 
 /**
@@ -47,6 +47,9 @@ import javafx.util.StringConverter;
  * @author Administrator
  */
 public class ReservationDetailsViewController implements ScreenController, Initializable {
+    @FXML
+    private Pane parent;
+    
     @FXML
     private Label startDateLabel;
     
@@ -81,16 +84,47 @@ public class ReservationDetailsViewController implements ScreenController, Initi
     private TableColumn selectColumn;
     
     @FXML
+    private ComboBox cardSelect;
+    
+    @FXML
     private Button confirmationButton;
     
     private ScreenManager manager;
     private ObservableList<Room> selectedRooms;
+    private ObservableList<String> availableCards;
     private Period lengthOfStay;
     private DoubleProperty totalCost;
+    
+    private Service<List<String>> cardService = new Service<List<String>>() {
+        @Override
+        protected Task<List<String>> createTask() {
+            return new Task<List<String>>() {
+                @Override
+                protected List<String> call() throws Exception {
+                    List<String> numbers = new ArrayList<>();
+                    try (Connection con = manager.openConnection();
+                    Statement s = con.createStatement();) {
+                        ResultSet rs = s.executeQuery(manager.getCardQuery());
+                        while (rs.next()) {
+                            numbers.add(rs.getString(1));
+                        }
+                    } catch(Exception ex) {
+                        throw ex;
+                    }
+                    return numbers;
+                }
+            };
+        }  
+    };
+    
+    @FXML
+    private void backHandler(ActionEvent event) {
+        manager.setScreen("MakeReservationView", null);
+    }
 
     @FXML
     private void addCardHandler(ActionEvent event) {
-        manager.setScreen("UserRegistrationView", null);
+        manager.setScreen("PaymentView", null);
     }
     
     @FXML
@@ -127,56 +161,73 @@ public class ReservationDetailsViewController implements ScreenController, Initi
         selectColumn.setCellFactory(CheckBoxTableCell.forTableColumn(selectColumn));
         
         selectedRooms = FXCollections.observableArrayList();
-        totalCost = new SimpleDoubleProperty(0.0);
-        
-        totalCostLabel.textProperty().bind(new StringBinding() {
-            @Override
-            protected String computeValue() {
-                return String.format("Total Cost: %s", totalCost.getValue());
-            }
-        });
-        
         selectedRoomsTable.setItems(selectedRooms);
+        availableCards = FXCollections.observableArrayList();
+        cardSelect.setItems(availableCards);
+        totalCost = new SimpleDoubleProperty();
+        
+        StringConverter<String> cardNumberConverter = new StringConverter<String>() {
+            @Override
+            public String toString(String object) {
+                char[] str = object.toCharArray();
+                for (int i = str.length - 5; i >= 0; i--) {
+                    str[i] = '•';
+                }
+                return String.valueOf(str);
+            }
+            @Override
+            public String fromString(String string) {
+                //Not used.
+                return null;
+            }
+        };
+        cardSelect.setConverter(cardNumberConverter);
+        
+        totalCostLabel.textProperty().bind(Bindings.createStringBinding(() -> {
+            NumberFormat currencyFormat = NumberFormat.getCurrencyInstance();
+            return String.format("Total Cost: %s", currencyFormat.format(totalCost.getValue()));   
+        }, totalCost));
+        
+        confirmationButton.disableProperty().bind(Bindings.createBooleanBinding(() ->
+            cardSelect.getValue() == null,
+        cardSelect.valueProperty()));
+        
+        cardService.setOnSucceeded((final WorkerStateEvent event) -> {
+            parent.setDisable(false);
+            availableCards.setAll((List<String>)event.getSource().getValue());
+        });
     }    
 
     @Override
     public void onSet(List arguments) {
-        Reservation reservation = manager.getPartialReservation();
-        selectedRooms.setAll(reservation.getRooms());
+        List<Room> rooms = manager.getReservationRooms();
+        LocalDate startDate = manager.getReservationStartDate();
+        LocalDate endDate = manager.getReservationEndDate();
+        
+        selectedRooms.setAll(rooms);
         DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("MM/dd/yyyy");
-        startDateLabel.setText(String.format("Start Date: %s", reservation.getStartDate().format(dateFormatter)));
-        endDateLabel.setText(String.format("Start Date: %s", reservation.getEndDate().format(dateFormatter)));
-        lengthOfStay = reservation.getStartDate().until(reservation.getEndDate());
+        startDateLabel.setText(String.format("Start Date: %s", startDate.format(dateFormatter)));
+        endDateLabel.setText(String.format("Start Date: %s", endDate.format(dateFormatter)));
+        lengthOfStay = startDate.until(endDate);
         lengthOfStayLabel.setText(String.format("Length of Stay: %d", lengthOfStay.getDays()));
         
         Observable[] dependencies = new BooleanProperty[selectedRooms.size()];
         for (int i = 0; i < dependencies.length; i++) {
             dependencies[i] = selectedRooms.get(i).selectedProperty();
         }
-        DoubleBinding costBinding = Bindings.createDoubleBinding(new Callable<Double>() {
-            @Override
-            public Double call() throws Exception {
-                double cost = 0.0;
-                for (Room room : selectedRooms) {
-                    cost += room.getDailyCost() * lengthOfStay.getDays();
-                    if (room.isSelected()) {
-                        cost += room.getExtraBedCost() * lengthOfStay.getDays();
-                    }
+        DoubleBinding costBinding = Bindings.createDoubleBinding(() -> {
+            double cost = 0.0;
+            for (Room room : selectedRooms) {
+                cost += room.getDailyCost() * lengthOfStay.getDays();
+                if (room.isSelected()) {
+                    cost += room.getExtraBedCost() * lengthOfStay.getDays();
                 }
-                return cost;
             }
+            return cost;
         }, dependencies);
         totalCost.bind(costBinding);
         
-        totalCostLabel.textProperty().bind(Bindings.createStringBinding(new Callable<String>() {
-            @Override
-            public String call() throws Exception {
-                NumberFormat currencyFormat = NumberFormat.getCurrencyInstance();
-                return String.format("Total Cost: %s", currencyFormat.format(totalCost.getValue()));
-            }   
-        }, totalCost));
-        
-        
+        cardService.restart();
     }
 
     @Override

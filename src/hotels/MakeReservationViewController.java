@@ -45,6 +45,7 @@ import javafx.scene.control.TableView.TableViewSelectionModel;
 import javafx.scene.control.cell.CheckBoxTableCell;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.control.cell.TextFieldTableCell;
+import javafx.scene.layout.Pane;
 import javafx.util.Callback;
 import javafx.util.StringConverter;
 
@@ -59,7 +60,7 @@ public class MakeReservationViewController implements ScreenController, Initiali
             + "FROM Room;";
     
     private static String roomSearchQuery = 
-            "SELECT Room_Num, Room_Cat, Num_People, Cost_Per_Day "
+            "SELECT Room_Num, Room_Categ, Num_People, Cost_Per_Day, Extra_Bed_Cost "
             + "FROM Room "
             + "WHERE Room_Location = '%1$s' AND NOT EXISTS( "
                 + "SELECT * "
@@ -68,6 +69,9 @@ public class MakeReservationViewController implements ScreenController, Initiali
                     + "Start_Date <= '%2$s' AND End_Date >= '%2$s' OR "
                     + "Start_Date <= '%3$s' AND End_Date >= '%3$s' OR "
                     + "Start_Date >= '%2$s' AND End_Date <= '%3$s'));";
+    
+    @FXML
+    private Pane parent;
     
     @FXML
     private ComboBox<String> locationSelect;
@@ -115,13 +119,16 @@ public class MakeReservationViewController implements ScreenController, Initiali
             return new Task<List<String>>() {
                 @Override
                 protected List<String> call() throws Exception {
-                    Connection con = manager.openConnection();
-                    Statement s = con.createStatement();
-                    String query = locationsQuery;
-                    ResultSet rs = s.executeQuery(query);
                     List<String> locations = new ArrayList<String>();
-                    while (rs.next()) {
-                        locations.add(rs.getString(1));
+                    try (Connection con = manager.openConnection();
+                        Statement s = con.createStatement();) {
+                        String query = locationsQuery;
+                        ResultSet rs = s.executeQuery(query);
+                        while (rs.next()) {
+                            locations.add(rs.getString(1));
+                        }
+                    } catch (Exception ex) {
+                        throw ex;
                     }
                     return locations;
                 }
@@ -155,13 +162,17 @@ public class MakeReservationViewController implements ScreenController, Initiali
                 protected List<Room> call() throws Exception {
                     String start = startDate.format(DateTimeFormatter.ISO_DATE);
                     String end = endDate.format(DateTimeFormatter.ISO_DATE);
-                    Connection con = manager.openConnection();
-                    Statement s = con.createStatement();
-                    String query = String.format(roomSearchQuery, location, startDate, endDate);
-                    ResultSet rs = s.executeQuery(query);
                     List<Room> rooms = new ArrayList<>();
-                    while (rs.next()) {
-                        rooms.add(new Room(rs.getInt(1), rs.getString(2), rs.getInt(3), rs.getDouble(4), 5));
+                    try (Connection con = manager.openConnection();
+                        Statement s = con.createStatement();) {
+                        String query = String.format(roomSearchQuery, location, startDate, endDate);
+                        ResultSet rs = s.executeQuery(query);
+                        while (rs.next()) {
+                            rooms.add(new Room(rs.getInt(1), rs.getString(2), rs.getInt(3), rs.getDouble(4), rs.getDouble(5)));
+                        }
+                    } catch (Exception ex) {
+                        System.out.println(ex.getMessage());
+                        throw ex;
                     }
                     return rooms;
                 }
@@ -259,6 +270,7 @@ public class MakeReservationViewController implements ScreenController, Initiali
         availableLocations = FXCollections.observableArrayList();
         availableRooms = FXCollections.observableArrayList();
         locationsService.setOnSucceeded((final WorkerStateEvent event) -> {
+            parent.setDisable(false);
             availableLocations.setAll((List<String>)event.getSource().getValue());
         });
         
@@ -269,33 +281,23 @@ public class MakeReservationViewController implements ScreenController, Initiali
             for (int i = 0; i < dependencies.length; i++) {
                 dependencies[i] = rooms.get(i).selectedProperty();
             }
-            nextButton.disableProperty().bind(Bindings.createBooleanBinding(new Callable<Boolean>() {
-                @Override
-                public Boolean call() throws Exception {
-                    boolean selected = false;
-                    for (Room room : availableRooms) {
-                        if (room.isSelected()) {
-                            selected = true;
-                            break;
-                        }
+            nextButton.disableProperty().bind(Bindings.createBooleanBinding(() -> {
+                boolean selected = false;
+                for (Room room : availableRooms) {
+                    if (room.isSelected()) {
+                        selected = true;
+                        break;
                     }
-                    return !selected;
                 }
+                return !selected;
             }, dependencies));
         });
         
-        searchService.setOnFailed((final WorkerStateEvent event) -> {
-            System.out.println(searchService.getException().getMessage());
-        });
-        
-        searchButton.disableProperty().bind(Bindings.createBooleanBinding(new Callable<Boolean>() {
-            @Override
-            public Boolean call() throws Exception {
-                return locationSelect.getValue() == null ||
-                        startDateSelect.getValue() == null ||
-                        endDateSelect.getValue() == null;
-            }
-        }, locationSelect.valueProperty(), startDateSelect.valueProperty(), endDateSelect.valueProperty()));
+        searchButton.disableProperty().bind(Bindings.createBooleanBinding(() -> 
+            locationSelect.getValue() == null ||
+            startDateSelect.getValue() == null ||
+            endDateSelect.getValue() == null,
+        locationSelect.valueProperty(), startDateSelect.valueProperty(), endDateSelect.valueProperty()));
         
         locationSelect.setItems(availableLocations);
         availableRoomsTable.setItems(availableRooms);

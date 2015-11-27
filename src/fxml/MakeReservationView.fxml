@@ -7,15 +7,15 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<AnchorPane id="AnchorPane" prefHeight="656.0" prefWidth="960.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="hotels.MakeReservationViewController">
+<AnchorPane id="AnchorPane" fx:id="parent" prefHeight="656.0" prefWidth="960.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="hotels.MakeReservationViewController">
    <children>
       <TableView fx:id="availableRoomsTable" editable="true" layoutX="34.0" layoutY="191.0" prefHeight="358.0" prefWidth="892.0">
         <columns>
-          <TableColumn fx:id="roomNumberColumn" prefWidth="159.0" resizable="false" text="Room Number" />
-          <TableColumn fx:id="typeColumn" minWidth="0.0" prefWidth="162.0" resizable="false" text="Type" />
-            <TableColumn fx:id="capacityColumn" prefWidth="124.0" resizable="false" text="Capacity" />
-            <TableColumn fx:id="dailyCostColumn" minWidth="0.0" prefWidth="141.0" resizable="false" text="Daily Cost" />
-            <TableColumn fx:id="extraBedColumn" prefWidth="181.0" resizable="false" text="Daily Extra Bed Cost" />
+          <TableColumn fx:id="roomNumberColumn" editable="false" prefWidth="159.0" resizable="false" text="Room Number" />
+          <TableColumn fx:id="typeColumn" editable="false" minWidth="0.0" prefWidth="162.0" resizable="false" text="Type" />
+            <TableColumn fx:id="capacityColumn" editable="false" prefWidth="124.0" resizable="false" text="Capacity" />
+            <TableColumn fx:id="dailyCostColumn" editable="false" minWidth="0.0" prefWidth="141.0" resizable="false" text="Daily Cost" />
+            <TableColumn fx:id="extraBedColumn" editable="false" prefWidth="181.0" resizable="false" text="Daily Extra Bed Cost" />
             <TableColumn fx:id="selectColumn" minWidth="0.0" prefWidth="117.0" resizable="false" text="Select" />
         </columns>
       </TableView>
@@ -31,7 +31,7 @@
       <DatePicker fx:id="startDateSelect" layoutX="285.0" layoutY="106.0" />
       <DatePicker fx:id="endDateSelect" layoutX="499.0" layoutY="106.0" />
       <Button fx:id="searchButton" disable="true" layoutX="708.0" layoutY="106.0" mnemonicParsing="false" onAction="#searchRoomsHandler" text="Search Rooms" />
-      <Button layoutX="34.0" layoutY="594.0" mnemonicParsing="false" onAction="#cancelHandler" text="Back" />
+      <Button layoutX="34.0" layoutY="594.0" mnemonicParsing="false" onAction="#cancelHandler" text="Cancel" />
       <ComboBox fx:id="locationSelect" layoutX="77.0" layoutY="106.0" prefWidth="150.0" />
    </children>
 </AnchorPane>

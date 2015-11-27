@@ -13,6 +13,7 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.layout.Pane;
 
 /**
  * FXML Controller class
@@ -20,6 +21,9 @@ import javafx.scene.control.Label;
  * @author Administrator
  */
 public class CustomerMenuViewController implements ScreenController, Initializable {
+    @FXML
+    private Pane parent;
+    
     @FXML
     private Label welcomeLabel;
     
@@ -74,7 +78,8 @@ public class CustomerMenuViewController implements ScreenController, Initializab
 
     @Override
     public void onSet(List arguments) {
-        welcomeLabel.setText(String.format("Welcome %s,", manager.getUser().getUsername()));
+        parent.setDisable(false);
+        welcomeLabel.setText(String.format("Welcome %s,", manager.getUserUsername()));
     }
 
     @Override

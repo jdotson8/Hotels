@@ -12,6 +12,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.List;
+import java.util.Random;
 import java.util.ResourceBundle;
 import javafx.concurrent.Service;
 import javafx.concurrent.Task;
@@ -37,7 +38,7 @@ public class LoginViewController implements ScreenController, Initializable {
     
     private static String managerQuery = 
             "SELECT Man_User "
-            + "FROM Management "
+            + "FROM Manager "
             + "WHERE Man_User = '%s' AND Man_Password = '%s';";
     
     @FXML
@@ -77,38 +78,50 @@ public class LoginViewController implements ScreenController, Initializable {
                 @Override
                 protected User call() throws Exception {
                     boolean isManager;
-                    if (username.matches("Man[0-9]{1,147}")) {
+                    if (username.matches("Manager[0-9]{1,43}")) {
                         isManager = true;
-                    } else if (username.matches("User[0-9]{1,146}")) {
+                    } else if (username.matches("User[0-9]{1,43}")) {
                         isManager = false;
                     } else {
                         throw new Exception("Invalid username.");
                     }
-                    Connection con = manager.openConnection();
-                    Statement s = con.createStatement();
-                    String query = String.format((isManager) ? managerQuery : customerQuery, username, password);
-                    ResultSet rs = s.executeQuery(query);
-                    if (rs.next()) {
-                        return new User(rs.getString(1), isManager);
-                    } else {
-                        throw new Exception("Incorrect username or password.");
+                    User result;
+                    try (Connection con = manager.openConnection();
+                        Statement s = con.createStatement();) {
+                        String query = String.format((isManager) ? managerQuery : customerQuery, username, password);
+                        ResultSet rs = s.executeQuery(query);
+                        if (rs.next()) {
+                            result = new User(rs.getString(1), isManager);
+                        } else {
+                            throw new Exception("Incorrect username or password.");
+                        }
+                    } catch (Exception ex) {
+                        throw ex;
                     }
+                    return result;
                 }
             };
         }         
     }
     private LoginService loginService = new LoginService();
     
+    private String[] locations = {"Atlanta", "Charlotte", "Savannah", "Orlando", "Miami"};
+    private String[] types = {"Standard", "Suite", "Family"};
+    private int[] capacities = {2, 4, 4};
+    private float[] costs = {100, 250, 170};
+    private float[] extraBed = {70, 150, 50};
+    
     @FXML
     private void loginHandler(ActionEvent event) {
-        parent.setDisable(true);
         errorLabel.setVisible(false);
+        parent.setDisable(true);
         loginService.setLoginInfo(usernameField.getText(), passwordField.getText());
         loginService.restart();
     }
     
     @FXML
     private void newUserHandler(ActionEvent event) {
+        errorLabel.setVisible(false);
         manager.setScreen("UserRegistrationView", null);
     }
     
@@ -116,9 +129,7 @@ public class LoginViewController implements ScreenController, Initializable {
     public void initialize(URL url, ResourceBundle rb) {
         loginService.setOnSucceeded((final WorkerStateEvent event) -> {
             manager.login((User)event.getSource().getValue());
-            usernameField.setText("");
-            passwordField.setText("");
-            manager.setScreen((manager.getUser().isManager()) ?
+            manager.setScreen((manager.userIsManager()) ?
                     "ManagerMenuView" :
                     "CustomerMenuView", null);
         });
@@ -132,12 +143,14 @@ public class LoginViewController implements ScreenController, Initializable {
     
     @Override
     public void onSet(List arguments) {
-        //Nothing
+        parent.setDisable(false);
     }
     
     @Override
     public void cleanUp() {
-        //Nothing
+        usernameField.setText("");
+        passwordField.setText("");
+        errorLabel.setVisible(false);
     }
     
     @Override

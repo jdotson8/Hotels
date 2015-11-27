@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.scene.paint.*?>
 <?import javafx.scene.text.*?>
 <?import java.lang.*?>
 <?import java.util.*?>
@@ -7,26 +8,29 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-
-<AnchorPane id="AnchorPane" prefHeight="400.0" prefWidth="600.0" xmlns:fx="http://javafx.com/fxml/1" xmlns="http://javafx.com/javafx/8" fx:controller="hotels.PaymentViewController">
+<AnchorPane id="AnchorPane" fx:id="parent" prefHeight="437.0" prefWidth="354.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="hotels.PaymentViewController">
    <children>
-      <Label layoutX="226.0" layoutY="14.0" text="Payment Information">
+      <Label layoutX="14.0" layoutY="14.0" text="Payment Information">
          <font>
             <Font size="16.0" />
          </font>
       </Label>
-      <Label layoutX="42.0" layoutY="50.0" text="Add Card:" />
+      <Label layoutX="69.0" layoutY="52.0" text="Add Card:" />
       <Label layoutX="42.0" layoutY="84.0" text="Name on Card:" />
       <Label layoutX="45.0" layoutY="122.0" text="Card Number:" />
       <Label layoutX="40.0" layoutY="158.0" text="Expiration Date:" />
       <Label layoutX="95.0" layoutY="192.0" text="CVV:" />
-      <TextField layoutX="135.0" layoutY="80.0" />
-      <TextField layoutX="137.0" layoutY="118.0" />
-      <TextField layoutX="137.0" layoutY="154.0" />
-      <TextField layoutX="137.0" layoutY="188.0" />
-      <Button layoutX="158.0" layoutY="321.0" mnemonicParsing="false" text="Save" />
-      <Label layoutX="301.0" layoutY="53.0" text="Delete Card:" />
-      <ChoiceBox layoutX="326.0" layoutY="80.0" prefWidth="150.0" />
-      <Button layoutX="425.0" layoutY="321.0" mnemonicParsing="false" text="Delete" />
+      <TextField fx:id="nameField" layoutX="135.0" layoutY="80.0" />
+      <TextField fx:id="numberField" layoutX="137.0" layoutY="118.0" />
+      <TextField fx:id="dateField" layoutX="137.0" layoutY="154.0" promptText="MM/YY" />
+      <TextField fx:id="cvvField" layoutX="137.0" layoutY="188.0" />
+      <Button fx:id="saveButton" layoutX="245.0" layoutY="226.0" mnemonicParsing="false" onAction="#saveHandler" text="Save" />
+      <Label layoutX="63.0" layoutY="260.0" text="Delete Card:" />
+      <Button fx:id="deleteButton" layoutX="233.0" layoutY="318.0" mnemonicParsing="false" onAction="#deleteHandler" text="Delete" />
+      <ComboBox fx:id="cardSelect" layoutX="135.0" layoutY="285.0" prefWidth="150.0" />
+      <Button layoutX="113.0" layoutY="398.0" mnemonicParsing="false" onAction="#backHandler" text="Back to Confirmation" />
+      <Label fx:id="errorLabel" layoutX="115.0" layoutY="365.0" text="Error" textFill="RED" visible="false" />
+      <Label fx:id="savedLabel" layoutX="178.0" layoutY="230.0" text="Card saved." visible="false" />
+      <Label fx:id="deletedLabel" layoutX="153.0" layoutY="322.0" text="Card deleted." visible="false" />
    </children>
 </AnchorPane>

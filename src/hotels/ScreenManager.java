@@ -11,6 +11,7 @@ import java.net.URL;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -55,6 +56,11 @@ public class ScreenManager extends AnimationTimer {
     private static String ACCESSOR = "cs4400_Group_9";
     private static String PASSWORD = "nnKXZ0Y2";
     
+    private static String cardQuery =
+            "SELECT Card_Num "
+            + "FROM Payment_Information "
+            + "WHERE Card_User = '%s'";
+    
     private static final int DURATION =  10;
     private static final int IMAGE_COUNT = 7;
     private static final int BLUR_THRESHOLD = 25;
@@ -71,6 +77,7 @@ public class ScreenManager extends AnimationTimer {
     
     private HashMap<String, Pane> screens;
     private HashMap<String, ScreenController> controllers;
+    private String current;
     private Pane screenPane;
     private Rectangle screenBackground;
     
@@ -208,6 +215,7 @@ public class ScreenManager extends AnimationTimer {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource(String.format("/fxml/%s", fileName)));
             Pane parent = (Pane) loader.load();
+            parent.setDisable(true);
             ScreenController controller = (ScreenController) loader.getController();
             controller.setManager(this);
             screens.put(name, parent);
@@ -224,7 +232,9 @@ public class ScreenManager extends AnimationTimer {
         if (nextScreen != null && controller != null) {
             controller.onSet(arguments);
             if (!screenPane.getChildren().isEmpty()) {
-                screenPane.getChildren().get(0).setDisable(true);
+                screens.get(current).setDisable(true);
+                controllers.get(current).cleanUp();
+                current = name;
                 Timeline fadeIn = new Timeline(
                     new KeyFrame(Duration.seconds(TRANSITION_DURATION / 3.0),
                         new KeyValue(screenPane.opacityProperty(), 1.0)
@@ -233,7 +243,6 @@ public class ScreenManager extends AnimationTimer {
                 Timeline resize = new Timeline(
                     new KeyFrame(Duration.seconds(TRANSITION_DURATION / 3.0),
                         (ActionEvent event) -> {
-                            nextScreen.setDisable(false);
                             fadeIn.play();
                         },
                         new KeyValue(screenBackground.widthProperty(), nextScreen.getPrefWidth()),
@@ -252,6 +261,7 @@ public class ScreenManager extends AnimationTimer {
                 
                 fadeOut.play();
             } else {
+                current = name;
                 screenBackground.setWidth(nextScreen.getPrefWidth());
                 screenBackground.setHeight(nextScreen.getPrefHeight());
                 screenPane.getChildren().add(nextScreen);
@@ -282,11 +292,27 @@ public class ScreenManager extends AnimationTimer {
         this.partialReservation = partialReservation;
     }
     
-    public Reservation getPartialReservation() {
-        return partialReservation;
+    public List<Room> getReservationRooms() {
+        return partialReservation.getRooms();
     }
     
-    public User getUser() {
-        return new User(user.getUsername(), user.isManager());
+    public LocalDate getReservationStartDate() {
+        return partialReservation.getStartDate();
+    }
+    
+    public LocalDate getReservationEndDate() {
+        return partialReservation.getEndDate();
+    }
+    
+    public String getUserUsername() {
+        return user.getUsername();
+    }
+    
+    public boolean userIsManager() {
+        return user.isManager();
+    }
+    
+    public String getCardQuery() {
+        return String.format(cardQuery, user.getUsername());
     }
 }
