@@ -65,7 +65,7 @@ public class MakeReservationViewController implements ScreenController, Initiali
             + "WHERE Room_Location = '%1$s' AND NOT EXISTS( "
                 + "SELECT * "
                 + "FROM Reservation "
-                + "WHERE Room_Location = Res_Location AND Room_Num = Res_RoomNum AND ( "
+                + "WHERE NOT Res_Cancelled AND Room_Location = Res_Location AND Room_Num = Res_RoomNum AND ( "
                     + "Start_Date <= '%2$s' AND End_Date >= '%2$s' OR "
                     + "Start_Date <= '%3$s' AND End_Date >= '%3$s' OR "
                     + "Start_Date >= '%2$s' AND End_Date <= '%3$s'));";
@@ -168,7 +168,7 @@ public class MakeReservationViewController implements ScreenController, Initiali
                         String query = String.format(roomSearchQuery, location, startDate, endDate);
                         ResultSet rs = s.executeQuery(query);
                         while (rs.next()) {
-                            rooms.add(new Room(rs.getInt(1), rs.getString(2), rs.getInt(3), rs.getDouble(4), rs.getDouble(5)));
+                            rooms.add(new Room(rs.getInt(1), location, rs.getString(2), rs.getInt(3), rs.getDouble(4), rs.getDouble(5)));
                         }
                     } catch (Exception ex) {
                         System.out.println(ex.getMessage());
@@ -220,7 +220,9 @@ public class MakeReservationViewController implements ScreenController, Initiali
                     @Override
                     public void updateItem(LocalDate item, boolean empty) {
                         super.updateItem(item, empty);
-                        if (item.isBefore(LocalDate.now())) {
+                        if (endDateSelect.getValue() != null &&
+                                item.isAfter(endDateSelect.getValue().minusDays(1)) ||
+                                item.isBefore(LocalDate.now())) {
                             setDisable(true);
                         }   
                     }
@@ -235,7 +237,9 @@ public class MakeReservationViewController implements ScreenController, Initiali
                     @Override
                     public void updateItem(LocalDate item, boolean empty) {
                         super.updateItem(item, empty);
-                        if (item.isBefore(startDateSelect.getValue().plusDays(1))) {
+                        if (startDateSelect.getValue() != null &&
+                                item.isBefore(startDateSelect.getValue().plusDays(1)) ||
+                                item.isBefore(LocalDate.now())) {
                             setDisable(true);
                         }   
                     }
@@ -310,7 +314,10 @@ public class MakeReservationViewController implements ScreenController, Initiali
     
     @Override
     public void cleanUp() {
-        //Nothing
+        availableLocations.clear();
+        startDateSelect.setValue(null);
+        endDateSelect.setValue(null);
+        availableRooms.clear();
     }
 
     @Override

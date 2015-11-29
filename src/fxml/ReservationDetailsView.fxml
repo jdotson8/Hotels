@@ -33,5 +33,6 @@
       </TableView>
       <Button layoutX="23.0" layoutY="361.0" mnemonicParsing="false" onAction="#backHandler" text="Back" />
       <ComboBox fx:id="cardSelect" layoutX="105.0" layoutY="298.0" prefWidth="150.0" />
+      <Label fx:id="errorLabel" layoutX="105.0" layoutY="323.0" text="Error" textFill="RED" visible="false" />
    </children>
 </AnchorPane>

@@ -57,7 +57,7 @@ public class ScreenManager extends AnimationTimer {
     private static String PASSWORD = "nnKXZ0Y2";
     
     private static String cardQuery =
-            "SELECT Card_Num "
+            "SELECT Card_Num, Exp_Date "
             + "FROM Payment_Information "
             + "WHERE Card_User = '%s'";
     
@@ -292,6 +292,22 @@ public class ScreenManager extends AnimationTimer {
         this.partialReservation = partialReservation;
     }
     
+    public Reservation getPartialReservation() {
+        return partialReservation;
+    }
+    
+    public int getReservationID() {
+        return partialReservation.getResID();
+    }
+    
+    public void setReservationCost(double cost) {
+        partialReservation.setTotalCost(cost);
+    }
+    
+    public double getReservationCost() {
+        return partialReservation.getTotalCost();
+    }
+    
     public List<Room> getReservationRooms() {
         return partialReservation.getRooms();
     }
@@ -314,5 +330,9 @@ public class ScreenManager extends AnimationTimer {
     
     public String getCardQuery() {
         return String.format(cardQuery, user.getUsername());
+    }
+    
+    public void setReservationCardNum(String cardNum) {
+        partialReservation.setCardNum(cardNum);
     }
 }

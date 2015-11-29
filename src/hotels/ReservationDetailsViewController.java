@@ -13,11 +13,13 @@ import java.text.NumberFormat;
 import java.time.LocalDate;
 import java.time.Period;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.ResourceBundle;
 import javafx.beans.Observable;
 import javafx.beans.binding.Bindings;
+import javafx.beans.binding.BooleanBinding;
 import javafx.beans.binding.DoubleBinding;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.DoubleProperty;
@@ -47,6 +49,12 @@ import javafx.util.StringConverter;
  * @author Administrator
  */
 public class ReservationDetailsViewController implements ScreenController, Initializable {
+    private static final String maxResIDQuery = "SELECT MAX(Res_ID) FROM Reservation;";
+    
+    private static final String reservationUpdate =
+            "INSERT INTO Reservation "
+            + "VALUES ('%d', '%d', '%s', '%s', '%s', '%f', '%d', '0', '%s', '%s')";
+    
     @FXML
     private Pane parent;
     
@@ -87,28 +95,32 @@ public class ReservationDetailsViewController implements ScreenController, Initi
     private ComboBox cardSelect;
     
     @FXML
+    private Label errorLabel;
+    
+    @FXML
     private Button confirmationButton;
     
     private ScreenManager manager;
     private ObservableList<Room> selectedRooms;
-    private ObservableList<String> availableCards;
-    private Period lengthOfStay;
+    private ObservableList<Card> availableCards;
+    private long lengthOfStay;
     private DoubleProperty totalCost;
     
-    private Service<List<String>> cardService = new Service<List<String>>() {
+    private Service<List<Card>> cardService = new Service<List<Card>>() {
         @Override
-        protected Task<List<String>> createTask() {
-            return new Task<List<String>>() {
+        protected Task<List<Card>> createTask() {
+            return new Task<List<Card>>() {
                 @Override
-                protected List<String> call() throws Exception {
-                    List<String> numbers = new ArrayList<>();
+                protected List<Card> call() throws Exception {
+                    List<Card> numbers = new ArrayList<>();
                     try (Connection con = manager.openConnection();
                     Statement s = con.createStatement();) {
                         ResultSet rs = s.executeQuery(manager.getCardQuery());
                         while (rs.next()) {
-                            numbers.add(rs.getString(1));
+                            numbers.add(new Card(rs.getString(1), rs.getDate(2).toLocalDate()));
                         }
                     } catch(Exception ex) {
+                        ex.printStackTrace();
                         throw ex;
                     }
                     return numbers;
@@ -116,6 +128,53 @@ public class ReservationDetailsViewController implements ScreenController, Initi
             };
         }  
     };
+    
+    private class ReservationService extends Service<Void> {
+        private Reservation res;
+        
+        public void setReservationInfo(Reservation res) {
+            this.res = res;
+        }
+        
+        @Override
+        protected Task<Void> createTask() {
+            return new Task<Void>() {
+                @Override
+                protected Void call() throws Exception {
+                    try (Connection con = manager.openConnection();
+                        Statement s = con.createStatement();) {
+                        ResultSet rs = s.executeQuery(maxResIDQuery);
+                        rs.next();
+                        int lastRes = rs.getInt(1);
+                        if (lastRes >= 1000) {
+                            res.setResID(lastRes + 1);
+                        } else {
+                            res.setResID(1000);
+                        }
+                        String update;
+                        for (Room room : res.getRooms()) {
+                            update = String.format(reservationUpdate,
+                                    res.getResID(),
+                                    room.getRoomNumber(),
+                                    room.getLocation(),
+                                    res.getStartDate(),
+                                    res.getEndDate(),
+                                    res.getTotalCost(),
+                                    (room.isSelected()) ? 1 : 0,
+                                    manager.getUserUsername(),
+                                    res.getCardNum());
+                            s.executeUpdate(update);
+                        }
+                    } catch (Exception ex) {
+                        ex.printStackTrace();
+                        throw ex;
+                    }
+                    return null;
+                }
+            };
+        }         
+    }
+    private ReservationService reservationService = new ReservationService();
     
     @FXML
     private void backHandler(ActionEvent event) {
@@ -129,7 +188,10 @@ public class ReservationDetailsViewController implements ScreenController, Initi
     
     @FXML
     private void confirmationHandler(ActionEvent event) {
-        
+        manager.setReservationCost(totalCost.getValue());
+        manager.setReservationCardNum(((Card)cardSelect.getValue()).getCardNum());
+        reservationService.setReservationInfo(manager.getPartialReservation());
+        reservationService.restart();
     }
 
     /**
@@ -166,36 +228,21 @@ public class ReservationDetailsViewController implements ScreenController, Initi
         cardSelect.setItems(availableCards);
         totalCost = new SimpleDoubleProperty();
         
-        StringConverter<String> cardNumberConverter = new StringConverter<String>() {
-            @Override
-            public String toString(String object) {
-                char[] str = object.toCharArray();
-                for (int i = str.length - 5; i >= 0; i--) {
-                    str[i] = '•';
-                }
-                return String.valueOf(str);
-            }
-            @Override
-            public String fromString(String string) {
-                //Not used.
-                return null;
-            }
-        };
-        cardSelect.setConverter(cardNumberConverter);
-        
         totalCostLabel.textProperty().bind(Bindings.createStringBinding(() -> {
             NumberFormat currencyFormat = NumberFormat.getCurrencyInstance();
             return String.format("Total Cost: %s", currencyFormat.format(totalCost.getValue()));   
         }, totalCost));
         
-        confirmationButton.disableProperty().bind(Bindings.createBooleanBinding(() ->
-            cardSelect.getValue() == null,
-        cardSelect.valueProperty()));
-        
         cardService.setOnSucceeded((final WorkerStateEvent event) -> {
             parent.setDisable(false);
-            availableCards.setAll((List<String>)event.getSource().getValue());
+            availableCards.setAll((List<Card>)event.getSource().getValue());
         });
+        
+        reservationService.setOnSucceeded((final WorkerStateEvent event) -> {
+            manager.setScreen("ConfirmationView", null);
+        });
+        
+        errorLabel.setText("Card expires before end date.");
     }    
 
     @Override
@@ -207,9 +254,9 @@ public class ReservationDetailsViewController implements ScreenController, Initi
         selectedRooms.setAll(rooms);
         DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("MM/dd/yyyy");
         startDateLabel.setText(String.format("Start Date: %s", startDate.format(dateFormatter)));
-        endDateLabel.setText(String.format("Start Date: %s", endDate.format(dateFormatter)));
-        lengthOfStay = startDate.until(endDate);
-        lengthOfStayLabel.setText(String.format("Length of Stay: %d", lengthOfStay.getDays()));
+        endDateLabel.setText(String.format("Date Date: %s", endDate.format(dateFormatter)));
+        lengthOfStay = startDate.until(endDate, ChronoUnit.DAYS);
+        lengthOfStayLabel.setText(String.format("Length of Stay: %d", lengthOfStay));
         
         Observable[] dependencies = new BooleanProperty[selectedRooms.size()];
         for (int i = 0; i < dependencies.length; i++) {
@@ -218,21 +265,37 @@ public class ReservationDetailsViewController implements ScreenController, Initi
         DoubleBinding costBinding = Bindings.createDoubleBinding(() -> {
             double cost = 0.0;
             for (Room room : selectedRooms) {
-                cost += room.getDailyCost() * lengthOfStay.getDays();
+                cost += room.getDailyCost() * lengthOfStay;
                 if (room.isSelected()) {
-                    cost += room.getExtraBedCost() * lengthOfStay.getDays();
+                    cost += room.getExtraBedCost() * lengthOfStay;
                 }
             }
             return cost;
         }, dependencies);
         totalCost.bind(costBinding);
         
+        BooleanBinding invalidCard = Bindings.createBooleanBinding(() -> {
+            if (cardSelect.getValue() != null) {
+                LocalDate expDate = ((Card)cardSelect.getValue()).getExpDate();
+                return expDate.compareTo(endDate) <= 0;
+            } else {
+                return false;
+            }      
+        }, cardSelect.valueProperty());
+        
+        errorLabel.visibleProperty().bind(invalidCard);
+        
+        confirmationButton.disableProperty().bind((Bindings.createBooleanBinding(() ->
+            cardSelect.getValue() == null,
+        cardSelect.valueProperty())).or(invalidCard));
+        
         cardService.restart();
     }
 
     @Override
     public void cleanUp() {
-        //Nothing
+        selectedRooms.clear();
+        availableCards.clear();
     }
 
     @Override

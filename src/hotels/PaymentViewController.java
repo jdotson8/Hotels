@@ -11,6 +11,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
@@ -46,7 +47,10 @@ public class PaymentViewController implements ScreenController, Initializable {
     
     private static final String deleteCardUpdate =
             "DELETE FROM Payment_Information "
-            + "WHERE Card_Num = '%s';";
+            + "WHERE Card_Num = '%s' AND NOT EXISTS( "
+                + "SELECT * "
+                + "FROM Reservation "
+                + "WHERE Card_Num = Res_CardNum AND End_Date > %s AND NOT Res_Cancelled);";
     
     @FXML
     private Pane parent;
@@ -82,22 +86,23 @@ public class PaymentViewController implements ScreenController, Initializable {
     private Label errorLabel;
     
     private ScreenManager manager;
-    private ObservableList<String> availableCards;
+    private ObservableList<Card> availableCards;
     
-    private Service<List<String>> cardService = new Service<List<String>>() {
+    private Service<List<Card>> cardService = new Service<List<Card>>() {
         @Override
-        protected Task<List<String>> createTask() {
-            return new Task<List<String>>() {
+        protected Task<List<Card>> createTask() {
+            return new Task<List<Card>>() {
                 @Override
-                protected List<String> call() throws Exception {
-                    List<String> numbers = new ArrayList<>();
+                protected List<Card> call() throws Exception {
+                    List<Card> numbers = new ArrayList<>();
                     try (Connection con = manager.openConnection();
-                        Statement s = con.createStatement();) {
+                    Statement s = con.createStatement();) {
                         ResultSet rs = s.executeQuery(manager.getCardQuery());
                         while (rs.next()) {
-                            numbers.add(rs.getString(1));
+                            numbers.add(new Card(rs.getString(1), rs.getDate(2).toLocalDate()));
                         }
                     } catch(Exception ex) {
+                        ex.printStackTrace();
                         throw ex;
                     }
                     return numbers;
@@ -106,7 +111,7 @@ public class PaymentViewController implements ScreenController, Initializable {
         }  
     };
     
-    private class SaveCardService extends Service<String> {
+    private class SaveCardService extends Service<Card> {
         private String name;
         private String number;
         private LocalDate date;
@@ -120,10 +125,10 @@ public class PaymentViewController implements ScreenController, Initializable {
         }
         
         @Override
-        protected Task<String> createTask() {
-            return new Task<String>() {
+        protected Task<Card> createTask() {
+            return new Task<Card>() {
                 @Override
-                protected String call() throws Exception {
+                protected Card call() throws Exception {
                     String expirationDate = date.format(DateTimeFormatter.ISO_DATE);
                     try (Connection con = manager.openConnection();
                         Statement s = con.createStatement();) {
@@ -132,33 +137,39 @@ public class PaymentViewController implements ScreenController, Initializable {
                     } catch (Exception ex) {
                         throw ex;
                     }
-                    return number;
+                    return new Card(number, date);
                 }
             };
         }         
     }
     private SaveCardService saveCardService = new SaveCardService();
     
-    private class DeleteCardService extends Service<String> {
+    private class DeleteCardService extends Service<Card> {
         private String number;
+        private LocalDate date;
         
-        public void setCardInfo(String number) {
+        public void setCardInfo(String number, LocalDate date) {
             this.number = number;
+            this.date = date;
         }
         
         @Override
-        protected Task<String> createTask() {
-            return new Task<String>() {
+        protected Task<Card> createTask() {
+            return new Task<Card>() {
                 @Override
-                protected String call() throws Exception {
+                protected Card call() throws Exception {
                     try (Connection con = manager.openConnection();
                         Statement s = con.createStatement();) {
-                        String update = String.format(deleteCardUpdate, number);
+                        String now = LocalDate.now().format(DateTimeFormatter.ISO_DATE);
+                        String update = String.format(deleteCardUpdate, number, now);
                         int result = s.executeUpdate(update);
+                        if (result == 0) {
+                            throw new Exception("Card is being used for a reservation.");
+                        }
                     } catch (Exception ex) {
                         throw ex;
                     }
-                    return number;
+                    return new Card(number, date);
                 }
             };
         }         
@@ -168,20 +179,34 @@ public class PaymentViewController implements ScreenController, Initializable {
     
     @FXML 
     private void saveHandler(ActionEvent event) {
-        DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yy");
-        LocalDate expirationDate = LocalDate.parse(String.format("01/%s",dateField.getText()), dateFormatter);
-        if (LocalDate.now().until(expirationDate).getDays() < 1) {
-            errorLabel.setText("Card is expired.");
+        parent.setDisable(true);
+        savedLabel.setVisible(false);
+        deletedLabel.setVisible(false);
+        errorLabel.setVisible(false);
+        if (!dateField.getText().matches("((1[0-2])|(0[1-9]))/[0-9][0-9]")) {
+            errorLabel.setText("Invalid date.");
             errorLabel.setVisible(true);
         } else {
-            saveCardService.setCardInfo(nameField.getText(), numberField.getText(), expirationDate, cvvField.getText());
-            saveCardService.restart();
+            DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yy");
+            LocalDate expirationDate = LocalDate.parse(String.format("01/%s",dateField.getText()), dateFormatter);
+            if (LocalDate.now().compareTo(expirationDate) > 0) {
+                errorLabel.setText("Card is expired.");
+                errorLabel.setVisible(true);
+            } else {
+                saveCardService.setCardInfo(nameField.getText(), numberField.getText(), expirationDate, cvvField.getText());
+                saveCardService.restart();
+            }
         }
     }
     
     @FXML
     private void deleteHandler(ActionEvent event) {
-        deleteCardService.setCardInfo((String)cardSelect.getValue());
+        parent.setDisable(true);
+        savedLabel.setVisible(false);
+        deletedLabel.setVisible(false);
+        errorLabel.setVisible(false);
+        Card card = (Card)cardSelect.getValue();
+        deleteCardService.setCardInfo(card.getCardNum(), card.getExpDate());
         deleteCardService.restart();
     }
     
@@ -197,22 +222,6 @@ public class PaymentViewController implements ScreenController, Initializable {
     public void initialize(URL url, ResourceBundle rb) {
         availableCards = FXCollections.observableArrayList();
         cardSelect.setItems(availableCards);
-        StringConverter<String> cardNumberConverter = new StringConverter<String>() {
-            @Override
-            public String toString(String object) {
-                char[] str = object.toCharArray();
-                for (int i = str.length - 5; i >= 0; i--) {
-                    str[i] = '•';
-                }
-                return String.valueOf(str);
-            }
-            @Override
-            public String fromString(String string) {
-                //Not used.
-                return null;
-            }
-        };
-        cardSelect.setConverter(cardNumberConverter);
         
         numberField.textProperty().addListener(new ChangeListener<String>() {
             @Override
@@ -241,12 +250,12 @@ public class PaymentViewController implements ScreenController, Initializable {
         
         cardService.setOnSucceeded((final WorkerStateEvent event) -> {
             parent.setDisable(false);
-            availableCards.setAll((List<String>)event.getSource().getValue());
+            availableCards.setAll((List<Card>)event.getSource().getValue());
         });
         
         saveCardService.setOnSucceeded((final WorkerStateEvent event) -> {
             savedLabel.setVisible(true);
-            availableCards.add((String)event.getSource().getValue());
+            availableCards.add((Card)event.getSource().getValue());
             nameField.setText("");
             numberField.setText("");
             dateField.setText("");
@@ -258,7 +267,7 @@ public class PaymentViewController implements ScreenController, Initializable {
             if (ex instanceof SQLException) {
                 SQLException sqlEx = (SQLException)ex;
                 if (sqlEx.getErrorCode() == 1062) {
-                    errorLabel.setText("Innvalid card number.");
+                    errorLabel.setText("Invalid card number.");
                 } else {
                     errorLabel.setText(sqlEx.getMessage());
                 }
@@ -270,22 +279,13 @@ public class PaymentViewController implements ScreenController, Initializable {
         
         deleteCardService.setOnSucceeded((final WorkerStateEvent event) -> {
             deletedLabel.setVisible(true);
-            availableCards.remove((String)event.getSource().getValue());
+            availableCards.remove((Card)event.getSource().getValue());
             cardSelect.setValue(null);
         });
         
         deleteCardService.setOnFailed((final WorkerStateEvent event) -> {
-            Throwable ex = saveCardService.getException();
-            if (ex instanceof SQLException) {
-                SQLException sqlEx = (SQLException)ex;
-                if (sqlEx.getErrorCode() == 1062) {
-                    errorLabel.setText("Innvalid card number.");
-                } else {
-                    errorLabel.setText(Integer.toString(sqlEx.getErrorCode()));
-                }
-            } else {
-                errorLabel.setText(ex.getMessage());
-            }
+            Throwable ex = deleteCardService.getException();
+            errorLabel.setText(ex.getMessage());
             errorLabel.setVisible(true);
         });
         
@@ -301,7 +301,13 @@ public class PaymentViewController implements ScreenController, Initializable {
 
     @Override
     public void cleanUp() {
-        //Nothing
+        savedLabel.setVisible(false);
+        deletedLabel.setVisible(false);
+        errorLabel.setVisible(false);
+        nameField.setText("");
+        numberField.setText("");
+        dateField.setText("");
+        cvvField.setText("");
     }
 
     @Override

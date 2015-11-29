@@ -17,14 +17,16 @@ import javafx.beans.property.StringProperty;
 
 public class Room {
         IntegerProperty roomNumber;
+        String location;
         StringProperty type;
         IntegerProperty capacity;
         DoubleProperty dailyCost;
         DoubleProperty extraBedCost;
         BooleanProperty selected;
         
-        public Room(int roomNumber, String type, int capacity, double dailyCost, double extraBedCost) {
+        public Room(int roomNumber, String location, String type, int capacity, double dailyCost, double extraBedCost) {
             this.roomNumber = new SimpleIntegerProperty(roomNumber);
+            this.location = location;
             this.type = new SimpleStringProperty(type);
             this.capacity = new SimpleIntegerProperty(capacity);
             this.dailyCost = new SimpleDoubleProperty(dailyCost);
@@ -60,6 +62,14 @@ public class Room {
             return selected.getValue();
         }
         
+        public int getRoomNumber() {
+            return roomNumber.getValue();
+        }
+        
+        public String getLocation() {
+            return location;
+        }
+        
         public double getDailyCost() {
             return dailyCost.getValue();
         }
@@ -69,6 +79,6 @@ public class Room {
         }
         
         public Room copy() {
-            return new Room(roomNumber.getValue(), type.getValue(), capacity.getValue(), dailyCost.getValue(), extraBedCost.getValue());
+            return new Room(roomNumber.getValue(), location, type.getValue(), capacity.getValue(), dailyCost.getValue(), extraBedCost.getValue());
         }
     }
