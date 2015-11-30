@@ -60,6 +60,13 @@ public class ScreenManager extends AnimationTimer {
             "SELECT Card_Num, Exp_Date "
             + "FROM Payment_Information "
             + "WHERE Card_User = '%s'";
+    private static String reservationQuery =
+            "SELECT Reservation.Res_ID, Reservation.Start_Date, Reservation.End_Date, Reservation.Res_Cancelled, Room.* "
+            + "FROM Reservation, Room "
+            + "WHERE NOT Res_Cancelled && Res_User = '%s' && "
+            + "Res_RoomNum = Room_Num && Res_Location = Room_Location";
+    
+    public enum ReservationState{CREATE, UPDATE, CANCEL, NONE};
     
     private static final int DURATION =  10;
     private static final int IMAGE_COUNT = 7;
@@ -91,6 +98,7 @@ public class ScreenManager extends AnimationTimer {
     private double aspectRatio;
     
     private User user;
+    ReservationState state;
     private Reservation partialReservation;
     
     private Service<Image> nextLoader = new Service() {
@@ -332,7 +340,19 @@ public class ScreenManager extends AnimationTimer {
         return String.format(cardQuery, user.getUsername());
     }
     
+    public String getReservationQuery() {
+        return String.format(reservationQuery, user.getUsername());
+    }
+    
     public void setReservationCardNum(String cardNum) {
         partialReservation.setCardNum(cardNum);
+    }
+    
+    public void setState(ReservationState state) {
+        this.state = state;
+    }
+    
+    public ReservationState getState() {
+        return state;
     }
 }

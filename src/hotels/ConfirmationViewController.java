@@ -45,6 +45,7 @@ public class ConfirmationViewController implements ScreenController, Initializab
     public void onSet(List arguments) {
         parent.setDisable(false);
         resIDField.setText(Integer.toString(manager.getReservationID()));
+        manager.setState(ScreenManager.ReservationState.NONE);
         manager.setPartialReservation(null);
     }
 

@@ -102,7 +102,6 @@ public class PaymentViewController implements ScreenController, Initializable {
                             numbers.add(new Card(rs.getString(1), rs.getDate(2).toLocalDate()));
                         }
                     } catch(Exception ex) {
-                        ex.printStackTrace();
                         throw ex;
                     }
                     return numbers;

@@ -58,6 +58,10 @@ public class Room {
             return selected;
         }
         
+        public void setSelected(boolean selected) {
+            this.selected.setValue(selected);
+        }
+        
         public boolean isSelected() {
             return selected.getValue();
         }

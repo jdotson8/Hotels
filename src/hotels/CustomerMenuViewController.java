@@ -46,16 +46,19 @@ public class CustomerMenuViewController implements ScreenController, Initializab
     
     @FXML
     private void makeResHandler(ActionEvent event) {
+        manager.setState(ScreenManager.ReservationState.UPDATE);
         manager.setScreen("MakeReservationView", null);
     }
     
     @FXML
     private void updateResHandler(ActionEvent event) {
-        manager.setScreen("MakeReservationView", null);
+        manager.setState(ScreenManager.ReservationState.UPDATE);
+        manager.setScreen("SelectReservationView", null);
     }
     @FXML
     private void cancelResHandler(ActionEvent event) {
-        // TODO
+        manager.setState(ScreenManager.ReservationState.CANCEL);
+        manager.setScreen("SelectReservationView", null);
     }
     
     @FXML

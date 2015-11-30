@@ -61,4 +61,9 @@ public class Reservation {
     public String getCardNum(){
         return cardNum;
     }
+    
+    @Override
+    public String toString() {
+        return Integer.toString(resID);
+    }
 }

@@ -205,6 +205,7 @@ public class MakeReservationViewController implements ScreenController, Initiali
             }
         }
         manager.setPartialReservation(new Reservation(searchService.getStartDate(), searchService.getEndDate(), selected));
+        manager.setState(ScreenManager.ReservationState.CREATE);
         manager.setScreen("ReservationDetailsView", null);
     }
 
@@ -318,6 +319,7 @@ public class MakeReservationViewController implements ScreenController, Initiali
         startDateSelect.setValue(null);
         endDateSelect.setValue(null);
         availableRooms.clear();
+        manager.setState(ScreenManager.ReservationState.NONE);
     }
 
     @Override

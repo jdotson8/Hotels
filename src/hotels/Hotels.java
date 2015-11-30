@@ -28,6 +28,7 @@ public class Hotels extends Application {
         controller.loadScreen("ReservationDetailsView", "ReservationDetailsView.fxml");
         controller.loadScreen("PaymentView", "PaymentView.fxml");
         controller.loadScreen("ConfirmationView", "ConfirmationView.fxml");
+        controller.loadScreen("SelectReservationView", "SelectReservationView.fxml");
         Scene scene = new Scene(controller.getRoot(), 1024, 720);
         
         stage.setScene(scene);
