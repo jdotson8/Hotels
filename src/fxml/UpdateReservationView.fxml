@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.text.*?>
+<?import java.lang.*?>
+<?import java.util.*?>
+<?import javafx.scene.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<AnchorPane id="AnchorPane" fx:id="parent" prefHeight="432.0" prefWidth="956.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="hotels.UpdateReservationViewController">
+   <children>
+      <Label layoutX="33.0" layoutY="14.0" text="Update Reservation">
+         <font>
+            <Font size="16.0" />
+         </font>
+      </Label>
+      <Label fx:id="startDateLabel" layoutX="219.0" layoutY="209.0" text="Start Date: DATE" />
+      <Label fx:id="endDateLabel" layoutX="222.0" layoutY="268.0" text="End Date: DATE" />
+      <Label fx:id="totalCostLabel" layoutX="385.0" layoutY="376.0" text="Updated Total Cost: COST" />
+      <Label fx:id="lengthOfStayLabel" layoutX="362.0" layoutY="351.0" text="Updated Length of Stay: DAYS" />
+      <Button layoutX="834.0" layoutY="393.0" mnemonicParsing="false" onAction="#confirmationHandler" text="Confirm Update" />
+      <TableView fx:id="selectedRoomsTable" layoutX="34.0" layoutY="50.0" prefHeight="142.0" prefWidth="888.0">
+         <columns>
+            <TableColumn fx:id="roomNumberColumn" prefWidth="159.0" resizable="false" text="Room Number" />
+            <TableColumn fx:id="typeColumn" minWidth="0.0" prefWidth="162.0" resizable="false" text="Type" />
+            <TableColumn fx:id="capacityColumn" prefWidth="124.0" resizable="false" text="Capacity" />
+            <TableColumn fx:id="dailyCostColumn" minWidth="0.0" prefWidth="141.0" resizable="false" text="Daily Cost" />
+            <TableColumn fx:id="extraBedColumn" prefWidth="181.0" resizable="false" text="Daily Extra Bed Cost" />
+            <TableColumn fx:id="selectColumn" editable="false" minWidth="0.0" prefWidth="106.0" resizable="false" text="Extra Bed" />
+         </columns>
+      </TableView>
+      <Button layoutX="14.0" layoutY="393.0" mnemonicParsing="false" onAction="#backHandler" text="Back" />
+      <Label fx:id="errorLabel" layoutX="105.0" layoutY="323.0" text="Error" textFill="RED" visible="false" />
+      <DatePicker fx:id="startDateSelect" layoutX="523.0" layoutY="207.0" />
+      <DatePicker fx:id="endDateSelect" layoutX="523.0" layoutY="262.0" />
+      <Label layoutX="408.0" layoutY="211.0" text="Updated Start Date:" />
+      <Label layoutX="411.0" layoutY="266.0" text="Updated End Date:" />
+      <Label fx:id="errorLabel" layoutX="326.0" layoutY="315.0" text="Rooms are not available for new date range." textFill="RED" visible="false" />
+   </children>
+</AnchorPane>

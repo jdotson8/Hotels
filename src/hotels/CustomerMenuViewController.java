@@ -77,7 +77,7 @@ public class CustomerMenuViewController implements ScreenController, Initializab
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         // TODO
-    }    
+    }
 
     @Override
     public void onSet(List arguments) {

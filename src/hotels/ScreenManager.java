@@ -60,8 +60,9 @@ public class ScreenManager extends AnimationTimer {
             "SELECT Card_Num, Exp_Date "
             + "FROM Payment_Information "
             + "WHERE Card_User = '%s'";
+    
     private static String reservationQuery =
-            "SELECT Reservation.Res_ID, Reservation.Start_Date, Reservation.End_Date, Reservation.Res_Cancelled, Room.* "
+            "SELECT Reservation.Res_ID, Reservation.Start_Date, Reservation.End_Date, Reservation.Res_ExtraBed, Room.* "
             + "FROM Reservation, Room "
             + "WHERE NOT Res_Cancelled && Res_User = '%s' && "
             + "Res_RoomNum = Room_Num && Res_Location = Room_Location";

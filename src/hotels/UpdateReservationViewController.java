@@ -11,7 +11,6 @@ import java.sql.ResultSet;
 import java.sql.Statement;
 import java.text.NumberFormat;
 import java.time.LocalDate;
-import java.time.Period;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -21,6 +20,8 @@ import javafx.beans.Observable;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
 import javafx.beans.binding.DoubleBinding;
+import javafx.beans.binding.IntegerBinding;
+import javafx.beans.binding.LongBinding;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
@@ -34,6 +35,8 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
+import javafx.scene.control.DateCell;
+import javafx.scene.control.DatePicker;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
@@ -41,6 +44,7 @@ import javafx.scene.control.cell.CheckBoxTableCell;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.scene.layout.Pane;
+import javafx.util.Callback;
 import javafx.util.StringConverter;
 
 /**
@@ -48,12 +52,19 @@ import javafx.util.StringConverter;
  *
  * @author Administrator
  */
-public class ReservationDetailsViewController implements ScreenController, Initializable {
-    private static final String maxResIDQuery = "SELECT MAX(Res_ID) FROM Reservation;";
+public class UpdateReservationViewController implements ScreenController, Initializable {
+    private static final String conflictingResQuery =
+        "SELECT COUNT(*) "
+        + "FROM Reservation "
+        + "WHERE NOT Res_Cancelled AND Res_ID != '%1$s' AND ( "
+            + "Start_Date <= '%2$s' AND End_Date >= '%2$s' OR "
+            + "Start_Date <= '%3$s' AND End_Date >= '%3$s' OR "
+            + "Start_Date >= '%2$s' AND End_Date <= '%3$s');";
     
-    private static final String reservationUpdate =
-            "INSERT INTO Reservation "
-            + "VALUES ('%d', '%d', '%s', '%s', '%s', '%f', '%d', '0', '%s', '%s')";
+    private static final String modifyReservationUpdate = 
+        "UPDATE Reservation AS newRes "
+        + "SET Start_Date = '%s', End_Date = '%s' "
+        + "WHERE Res_ID = '%s';";
     
     @FXML
     private Pane parent;
@@ -63,6 +74,12 @@ public class ReservationDetailsViewController implements ScreenController, Initi
     
     @FXML
     private Label endDateLabel;
+    
+    @FXML
+    private DatePicker startDateSelect;
+    
+    @FXML
+    private DatePicker endDateSelect;
     
     @FXML
     private Label lengthOfStayLabel;
@@ -103,37 +120,16 @@ public class ReservationDetailsViewController implements ScreenController, Initi
     private ScreenManager manager;
     private ObservableList<Room> selectedRooms;
     private ObservableList<Card> availableCards;
-    private long lengthOfStay;
+    private LongBinding lengthOfStay;
     private DoubleProperty totalCost;
     
-    private Service<List<Card>> cardService = new Service<List<Card>>() {
-        @Override
-        protected Task<List<Card>> createTask() {
-            return new Task<List<Card>>() {
-                @Override
-                protected List<Card> call() throws Exception {
-                    List<Card> numbers = new ArrayList<>();
-                    try (Connection con = manager.openConnection();
-                    Statement s = con.createStatement();) {
-                        ResultSet rs = s.executeQuery(manager.getCardQuery());
-                        while (rs.next()) {
-                            numbers.add(new Card(rs.getString(1), rs.getDate(2).toLocalDate()));
-                        }
-                    } catch(Exception ex) {
-                        ex.printStackTrace();
-                        throw ex;
-                    }
-                    return numbers;
-                }
-            };
-        }  
-    };
-    
     private class ReservationService extends Service<Void> {
-        private Reservation res;
+        private LocalDate startDate;
+        private LocalDate endDate;
         
-        public void setReservationInfo(Reservation res) {
-            this.res = res;
+        public void setReservationInfo(LocalDate startDate, LocalDate endDate) {
+            this.startDate = startDate;
+            this.endDate = endDate;
         }
         
         @Override
@@ -141,32 +137,20 @@ public class ReservationDetailsViewController implements ScreenController, Initi
             return new Task<Void>() {
                 @Override
                 protected Void call() throws Exception {
+                    String start = startDate.format(DateTimeFormatter.ISO_DATE);
+                    String end = endDate.format(DateTimeFormatter.ISO_DATE);
                     try (Connection con = manager.openConnection();
                         Statement s = con.createStatement();) {
-                        ResultSet rs = s.executeQuery(maxResIDQuery);
+                        String query = String.format(conflictingResQuery, manager.getReservationID(), startDate, endDate);
+                        ResultSet rs = s.executeQuery(query);
                         rs.next();
-                        int lastRes = rs.getInt(1);
-                        if (lastRes >= 1000) {
-                            res.setResID(lastRes + 1);
-                        } else {
-                            res.setResID(1000);
-                        }
-                        String update;
-                        for (Room room : res.getRooms()) {
-                            update = String.format(reservationUpdate,
-                                    res.getResID(),
-                                    room.getRoomNumber(),
-                                    room.getLocation(),
-                                    res.getStartDate(),
-                                    res.getEndDate(),
-                                    res.getTotalCost(),
-                                    (room.isSelected()) ? 1 : 0,
-                                    manager.getUserUsername(),
-                                    res.getCardNum());
+                        if (rs.getInt(1) != 0) {
+                            String update = String.format(modifyReservationUpdate, startDate, endDate, manager.getReservationID());
                             s.executeUpdate(update);
+                        } else {
+                            throw new Exception("Rooms are not available for new date range.");
                         }
                     } catch (Exception ex) {
-                        ex.printStackTrace();
                         throw ex;
                     }
                     return null;
@@ -177,23 +161,18 @@ public class ReservationDetailsViewController implements ScreenController, Initi
     private ReservationService reservationService = new ReservationService();
     
     @FXML
-    private void backHandler(ActionEvent event) {
-        manager.setScreen("MakeReservationView", null);
-    }
-
-    @FXML
-    private void addCardHandler(ActionEvent event) {
-        manager.setScreen("PaymentView", null);
+    private void confirmationHandler(ActionEvent event) {
+        parent.setDisable(true);
+        errorLabel.setVisible(false);
+        reservationService.setReservationInfo(startDateSelect.getValue(), endDateSelect.getValue());
+        reservationService.restart();
     }
     
     @FXML
-    private void confirmationHandler(ActionEvent event) {
-        manager.setReservationCost(totalCost.getValue());
-        manager.setReservationCardNum(((Card)cardSelect.getValue()).getCardNum());
-        reservationService.setReservationInfo(manager.getPartialReservation());
-        reservationService.restart();
+    private void backHandler(ActionEvent event) {
+        manager.setScreen("SelectReservationView", null);
     }
-
+    
     /**
      * Initializes the controller class.
      */
@@ -224,8 +203,6 @@ public class ReservationDetailsViewController implements ScreenController, Initi
         
         selectedRooms = FXCollections.observableArrayList();
         selectedRoomsTable.setItems(selectedRooms);
-        availableCards = FXCollections.observableArrayList();
-        cardSelect.setItems(availableCards);
         totalCost = new SimpleDoubleProperty();
         
         totalCostLabel.textProperty().bind(Bindings.createStringBinding(() -> {
@@ -233,18 +210,31 @@ public class ReservationDetailsViewController implements ScreenController, Initi
             return String.format("Total Cost: %s", currencyFormat.format(totalCost.getValue()));   
         }, totalCost));
         
-        cardService.setOnSucceeded((final WorkerStateEvent event) -> {
-            parent.setDisable(false);
-            availableCards.setAll((List<Card>)event.getSource().getValue());
-        });
+        lengthOfStay = Bindings.createLongBinding(() -> {
+            if (startDateSelect.getValue() == null || endDateSelect.getValue() == null) {
+                return 0L;
+            }
+            return startDateSelect.getValue().until(endDateSelect.getValue(), ChronoUnit.DAYS);
+        }, startDateSelect.valueProperty(), endDateSelect.valueProperty());
+        lengthOfStayLabel.textProperty().bind(Bindings.createStringBinding(() ->
+                String.format("Updated Length of Stay: %d", lengthOfStay.getValue()), lengthOfStay));
         
         reservationService.setOnSucceeded((final WorkerStateEvent event) -> {
+            parent.setDisable(false);
             manager.setScreen("ConfirmationView", null);
+        });
+        
+        reservationService.setOnFailed((final WorkerStateEvent event) -> {
+            parent.setDisable(false);
+            errorLabel.setText(reservationService.getException().getMessage());
+            errorLabel.setVisible(true);
         });
     }    
 
     @Override
     public void onSet(List arguments) {
+        parent.setDisable(false);
+        
         List<Room> rooms = manager.getReservationRooms();
         LocalDate startDate = manager.getReservationStartDate();
         LocalDate endDate = manager.getReservationEndDate();
@@ -253,47 +243,59 @@ public class ReservationDetailsViewController implements ScreenController, Initi
         DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("MM/dd/yyyy");
         startDateLabel.setText(String.format("Start Date: %s", startDate.format(dateFormatter)));
         endDateLabel.setText(String.format("Date Date: %s", endDate.format(dateFormatter)));
-        lengthOfStay = startDate.until(endDate, ChronoUnit.DAYS);
-        lengthOfStayLabel.setText(String.format("Length of Stay: %d", lengthOfStay));
+        startDateSelect.setValue(startDate);
+        endDateSelect.setValue(endDate);
         
-        Observable[] dependencies = new BooleanProperty[selectedRooms.size()];
-        for (int i = 0; i < dependencies.length; i++) {
-            dependencies[i] = selectedRooms.get(i).selectedProperty();
-        }
+        startDateSelect.setDayCellFactory(new Callback<DatePicker, DateCell>() {
+            @Override
+            public DateCell call(final DatePicker datePicker) {
+                return new DateCell() {
+                    @Override
+                    public void updateItem(LocalDate item, boolean empty) {
+                        super.updateItem(item, empty);
+                        if (endDateSelect.getValue() != null &&
+                                item.isAfter(endDateSelect.getValue().minusDays(1)) ||
+                                item.isBefore(LocalDate.now())) {
+                            setDisable(true);
+                        }   
+                    }
+                };
+            }
+        });
+        
+        endDateSelect.setDayCellFactory(new Callback<DatePicker, DateCell>() {
+            @Override
+            public DateCell call(final DatePicker datePicker) {
+                return new DateCell() {
+                    @Override
+                    public void updateItem(LocalDate item, boolean empty) {
+                        super.updateItem(item, empty);
+                        if (startDateSelect.getValue() != null &&
+                                item.isBefore(startDateSelect.getValue().plusDays(1)) ||
+                                item.isBefore(LocalDate.now())) {
+                            setDisable(true);
+                        }   
+                    }
+                };
+            }
+        });
+
         DoubleBinding costBinding = Bindings.createDoubleBinding(() -> {
             double cost = 0.0;
             for (Room room : selectedRooms) {
-                cost += room.getDailyCost() * lengthOfStay;
+                cost += room.getDailyCost() * lengthOfStay.getValue();
                 if (room.isSelected()) {
-                    cost += room.getExtraBedCost() * lengthOfStay;
+                    cost += room.getExtraBedCost() * lengthOfStay.getValue();
                 }
             }
             return cost;
-        }, dependencies);
+        }, lengthOfStay);
         totalCost.bind(costBinding);
-        
-        BooleanBinding invalidCard = Bindings.createBooleanBinding(() -> {
-            if (cardSelect.getValue() != null) {
-                LocalDate expDate = ((Card)cardSelect.getValue()).getExpDate();
-                return expDate.compareTo(endDate) <= 0;
-            } else {
-                return false;
-            }      
-        }, cardSelect.valueProperty());
-        
-        errorLabel.visibleProperty().bind(invalidCard);
-        
-        confirmationButton.disableProperty().bind((Bindings.createBooleanBinding(() ->
-            cardSelect.getValue() == null,
-        cardSelect.valueProperty())).or(invalidCard));
-        
-        cardService.restart();
     }
 
     @Override
     public void cleanUp() {
-        selectedRooms.clear();
-        availableCards.clear();
+        //Nothing
     }
 
     @Override
