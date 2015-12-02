@@ -178,7 +178,6 @@ public class PaymentViewController implements ScreenController, Initializable {
     
     @FXML 
     private void saveHandler(ActionEvent event) {
-        parent.setDisable(true);
         savedLabel.setVisible(false);
         deletedLabel.setVisible(false);
         errorLabel.setVisible(false);
@@ -192,6 +191,7 @@ public class PaymentViewController implements ScreenController, Initializable {
                 errorLabel.setText("Card is expired.");
                 errorLabel.setVisible(true);
             } else {
+                parent.setDisable(true);
                 saveCardService.setCardInfo(nameField.getText(), numberField.getText(), expirationDate, cvvField.getText());
                 saveCardService.restart();
             }
@@ -253,6 +253,7 @@ public class PaymentViewController implements ScreenController, Initializable {
         });
         
         saveCardService.setOnSucceeded((final WorkerStateEvent event) -> {
+            parent.setDisable(false);
             savedLabel.setVisible(true);
             availableCards.add((Card)event.getSource().getValue());
             nameField.setText("");
@@ -277,6 +278,7 @@ public class PaymentViewController implements ScreenController, Initializable {
         });
         
         deleteCardService.setOnSucceeded((final WorkerStateEvent event) -> {
+            parent.setDisable(false);
             deletedLabel.setVisible(true);
             availableCards.remove((Card)event.getSource().getValue());
             cardSelect.setValue(null);

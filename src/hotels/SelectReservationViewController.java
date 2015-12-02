@@ -66,17 +66,19 @@ public class SelectReservationViewController implements ScreenController, Initia
                             int resID = rs.getInt(1);
                             LocalDate startDate = rs.getDate(2).toLocalDate();
                             LocalDate endDate = rs.getDate(3).toLocalDate();
+                            double totalCost = rs.getDouble(4);
                             List<Room> rooms = new ArrayList<>();
                             do {
-                                Room r = new Room(rs.getInt(5), rs.getString(6),
-                                        rs.getString(8), rs.getInt(7), rs.getDouble(9),
-                                        rs.getDouble(10));
-                                r.setSelected(rs.getBoolean(4));
+                                Room r = new Room(rs.getInt(6), rs.getString(7),
+                                        rs.getString(9), rs.getInt(8), rs.getDouble(10),
+                                        rs.getDouble(11));
+                                r.setSelected(rs.getBoolean(5));
                                 rooms.add(r);
                             } while(rs.next() && resID == rs.getInt(1));
                             if (LocalDate.now().until(endDate, ChronoUnit.DAYS) > 0) {
                                 Reservation res = new Reservation(startDate, endDate, rooms);
                                 res.setResID(resID);
+                                res.setTotalCost(totalCost);
                                 reservations.add(res);
                             }
                             rs.previous();

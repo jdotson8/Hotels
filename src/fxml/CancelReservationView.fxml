@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.text.*?>
+<?import java.lang.*?>
+<?import java.util.*?>
+<?import javafx.scene.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<AnchorPane id="AnchorPane" fx:id="parent" prefHeight="432.0" prefWidth="956.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="hotels.CancelReservationViewController">
+   <children>
+      <Label layoutX="33.0" layoutY="14.0" text="Update Reservation">
+         <font>
+            <Font size="16.0" />
+         </font>
+      </Label>
+      <Label fx:id="startDateLabel" layoutX="434.0" layoutY="208.0" text="Start Date: DATE" />
+      <Label fx:id="endDateLabel" layoutX="434.0" layoutY="235.0" text="End Date: DATE" />
+      <Button layoutX="834.0" layoutY="393.0" mnemonicParsing="false" onAction="#confirmationHandler" text="Confirm Update" />
+      <TableView fx:id="selectedRoomsTable" layoutX="34.0" layoutY="50.0" prefHeight="142.0" prefWidth="888.0">
+         <columns>
+            <TableColumn fx:id="roomNumberColumn" prefWidth="159.0" resizable="false" text="Room Number" />
+            <TableColumn fx:id="typeColumn" minWidth="0.0" prefWidth="162.0" resizable="false" text="Type" />
+            <TableColumn fx:id="capacityColumn" prefWidth="124.0" resizable="false" text="Capacity" />
+            <TableColumn fx:id="dailyCostColumn" minWidth="0.0" prefWidth="141.0" resizable="false" text="Daily Cost" />
+            <TableColumn fx:id="extraBedColumn" prefWidth="181.0" resizable="false" text="Daily Extra Bed Cost" />
+            <TableColumn fx:id="selectColumn" editable="false" minWidth="0.0" prefWidth="106.0" resizable="false" text="Extra Bed" />
+         </columns>
+      </TableView>
+      <Button layoutX="14.0" layoutY="393.0" mnemonicParsing="false" onAction="#backHandler" text="Back" />
+      <Label fx:id="errorLabel" layoutX="105.0" layoutY="323.0" text="Error" textFill="RED" visible="false" />
+      <Label fx:id="errorLabel" layoutX="326.0" layoutY="315.0" text="Rooms are not available for new date range." textFill="RED" visible="false" />
+      <Label fx:id="cancellationLabel" layoutX="434.0" layoutY="264.0" text="Cancellation Date: DATE" />
+      <Label fx:id="totalCostLabel" layoutX="434.0" layoutY="290.0" text="Total Cost: COST" />
+      <Label fx:id="refundLabel" layoutX="434.0" layoutY="315.0" text="Refund Amount: AMOUNT" />
+   </children>
+</AnchorPane>

@@ -14,7 +14,7 @@ import javafx.fxml.Initializable;
  *
  * @author Administrator
  */
-public class CancelReservationController implements Initializable {
+public class CreateReviewViewController implements Initializable {
 
     /**
      * Initializes the controller class.

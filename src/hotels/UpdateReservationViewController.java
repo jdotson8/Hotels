@@ -56,15 +56,19 @@ public class UpdateReservationViewController implements ScreenController, Initia
     private static final String conflictingResQuery =
         "SELECT COUNT(*) "
         + "FROM Reservation "
-        + "WHERE NOT Res_Cancelled AND Res_ID != '%1$s' AND ( "
-            + "Start_Date <= '%2$s' AND End_Date >= '%2$s' OR "
-            + "Start_Date <= '%3$s' AND End_Date >= '%3$s' OR "
-            + "Start_Date >= '%2$s' AND End_Date <= '%3$s');";
+        + "WHERE Res_RoomNum = '%4$s' AND Res_Location = '%5$s' AND "
+            + "NOT Res_Cancelled AND Res_ID != '%1$s' AND ( "
+            + "Start_Date < '%2$s' AND End_Date > '%2$s' OR "
+            + "Start_Date < '%3$s' AND End_Date > '%3$s' OR "
+            + "Start_Date > '%2$s' AND End_Date < '%3$s');";
     
     private static final String modifyReservationUpdate = 
-        "UPDATE Reservation AS newRes "
-        + "SET Start_Date = '%s', End_Date = '%s' "
-        + "WHERE Res_ID = '%s';";
+        "UPDATE Reservation "
+        + "SET Start_Date = '%1$s', End_Date = '%2$s', Tot_Cost = '%3$f' "
+        + "WHERE Res_ID = '%4$s' AND NOT EXISTS( "
+            + "SELECT * "
+            + "FROM Payment_Information "
+            + "WHERE Res_CardNum = Card_Num AND Exp_Date < '%2$s');";
     
     @FXML
     private Pane parent;
@@ -119,7 +123,6 @@ public class UpdateReservationViewController implements ScreenController, Initia
     
     private ScreenManager manager;
     private ObservableList<Room> selectedRooms;
-    private ObservableList<Card> availableCards;
     private LongBinding lengthOfStay;
     private DoubleProperty totalCost;
     
@@ -141,12 +144,22 @@ public class UpdateReservationViewController implements ScreenController, Initia
                     String end = endDate.format(DateTimeFormatter.ISO_DATE);
                     try (Connection con = manager.openConnection();
                         Statement s = con.createStatement();) {
-                        String query = String.format(conflictingResQuery, manager.getReservationID(), startDate, endDate);
-                        ResultSet rs = s.executeQuery(query);
-                        rs.next();
-                        if (rs.getInt(1) != 0) {
-                            String update = String.format(modifyReservationUpdate, startDate, endDate, manager.getReservationID());
-                            s.executeUpdate(update);
+                        List<Room> rooms = manager.getReservationRooms();
+                        boolean failed = false;
+                        for (Room room : rooms) {
+                            String query = String.format(conflictingResQuery, manager.getReservationID(), startDate, endDate, room.getRoomNumber(), room.getLocation());
+                            ResultSet rs = s.executeQuery(query);
+                            rs.next();
+                            if (rs.getInt(1) > 0) {
+                                failed = true;
+                                break;
+                            }
+                        }
+                        if (!failed) {
+                            String update = String.format(modifyReservationUpdate, startDate, endDate, manager.getReservationCost(), manager.getReservationID());
+                            if(s.executeUpdate(update) == 0) {
+                                throw new Exception("Card expires before updated date.");
+                            } 
                         } else {
                             throw new Exception("Rooms are not available for new date range.");
                         }
@@ -164,6 +177,7 @@ public class UpdateReservationViewController implements ScreenController, Initia
     private void confirmationHandler(ActionEvent event) {
         parent.setDisable(true);
         errorLabel.setVisible(false);
+        manager.setReservationCost(totalCost.getValue());
         reservationService.setReservationInfo(startDateSelect.getValue(), endDateSelect.getValue());
         reservationService.restart();
     }
@@ -242,7 +256,7 @@ public class UpdateReservationViewController implements ScreenController, Initia
         selectedRooms.setAll(rooms);
         DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("MM/dd/yyyy");
         startDateLabel.setText(String.format("Start Date: %s", startDate.format(dateFormatter)));
-        endDateLabel.setText(String.format("Date Date: %s", endDate.format(dateFormatter)));
+        endDateLabel.setText(String.format("End Date: %s", endDate.format(dateFormatter)));
         startDateSelect.setValue(startDate);
         endDateSelect.setValue(endDate);
         
@@ -295,7 +309,7 @@ public class UpdateReservationViewController implements ScreenController, Initia
 
     @Override
     public void cleanUp() {
-        //Nothing
+        
     }
 
     @Override

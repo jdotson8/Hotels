@@ -62,10 +62,10 @@ public class ScreenManager extends AnimationTimer {
             + "WHERE Card_User = '%s'";
     
     private static String reservationQuery =
-            "SELECT Reservation.Res_ID, Reservation.Start_Date, Reservation.End_Date, Reservation.Res_ExtraBed, Room.* "
+            "SELECT Reservation.Res_ID, Reservation.Start_Date, Reservation.End_Date, Reservation.Tot_Cost, Reservation.Res_ExtraBed, Room.* "
             + "FROM Reservation, Room "
-            + "WHERE NOT Res_Cancelled && Res_User = '%s' && "
-            + "Res_RoomNum = Room_Num && Res_Location = Room_Location";
+            + "WHERE NOT Res_Cancelled AND Res_User = '%s' AND "
+            + "Res_RoomNum = Room_Num AND Res_Location = Room_Location";
     
     public enum ReservationState{CREATE, UPDATE, CANCEL, NONE};
     
