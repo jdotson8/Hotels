@@ -19,23 +19,28 @@ import javafx.stage.Stage;
 public class Hotels extends Application {
     @Override
     public void start(Stage stage) throws Exception {
-        ScreenManager controller = new ScreenManager(1024, 720);
-        controller.loadScreen("LoginView", "LoginView.fxml");
-        controller.loadScreen("UserRegistrationView", "UserRegistrationView.fxml");
-        controller.loadScreen("CustomerMenuView", "CustomerMenuView.fxml");
-        controller.loadScreen("ManagerMenuView", "ManagerMenuView.fxml");
-        controller.loadScreen("MakeReservationView", "MakeReservationView.fxml");
-        controller.loadScreen("ReservationDetailsView", "ReservationDetailsView.fxml");
-        controller.loadScreen("PaymentView", "PaymentView.fxml");
-        controller.loadScreen("ConfirmationView", "ConfirmationView.fxml");
-        controller.loadScreen("SelectReservationView", "SelectReservationView.fxml");
-        controller.loadScreen("UpdateReservationView", "UpdateReservationView.fxml");
-        controller.loadScreen("CancelReservationView", "CancelReservationView.fxml");
-        Scene scene = new Scene(controller.getRoot(), 1024, 720);
+        ScreenManager manager = new ScreenManager(1024, 720);
+        manager.loadScreen("LoginView", "LoginView.fxml");
+        manager.loadScreen("UserRegistrationView", "UserRegistrationView.fxml");
+        manager.loadScreen("CustomerMenuView", "CustomerMenuView.fxml");
+        manager.loadScreen("ManagerMenuView", "ManagerMenuView.fxml");
+        manager.loadScreen("MakeReservationView", "MakeReservationView.fxml");
+        manager.loadScreen("ReservationDetailsView", "ReservationDetailsView.fxml");
+        manager.loadScreen("PaymentView", "PaymentView.fxml");
+        manager.loadScreen("ConfirmationView", "ConfirmationView.fxml");
+        manager.loadScreen("SelectReservationView", "SelectReservationView.fxml");
+        manager.loadScreen("UpdateReservationView", "UpdateReservationView.fxml");
+        manager.loadScreen("CancelReservationView", "CancelReservationView.fxml");
+        manager.loadScreen("CreateReviewView", "CreateReviewView.fxml");
+        manager.loadScreen("ReadReviewView", "ReadReviewView.fxml");
+        manager.loadScreen("ReservationReportView", "ReservationReportView.fxml");
+        manager.loadScreen("RoomReportView", "RoomReportView.fxml");
+        manager.loadScreen("RevenueReportView", "RevenueReportView.fxml");
+        Scene scene = new Scene(manager.getRoot(), 1024, 720);
         
         stage.setScene(scene);
         stage.show();
-        controller.setScreen("LoginView", null);
+        manager.setScreen("LoginView", null);
     }
 
     /**

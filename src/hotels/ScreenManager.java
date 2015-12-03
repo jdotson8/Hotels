@@ -67,7 +67,25 @@ public class ScreenManager extends AnimationTimer {
             + "WHERE NOT Res_Cancelled AND Res_User = '%s' AND "
             + "Res_RoomNum = Room_Num AND Res_Location = Room_Location";
     
+    private static String locationsQuery =
+            "SELECT DISTINCT Room_Location "
+            + "FROM Room;";
+    
     public enum ReservationState{CREATE, UPDATE, CANCEL, NONE};
+    public enum Month{JANUARY("January"), FEBRUARY("February"), MARCH("March"),
+            APRIL("April"), MAY("May"), JUNE("June"), JULY("July"), AUGUST("August"),
+            SEMPTEMBER("Semptember"), OCTOBER("October"), NOVEMER("November"), DECEMBER("December");
+            
+            private String name;
+            private Month(String name) {
+                this.name = name;
+            }
+            
+            @Override
+            public String toString() {
+                return name;
+            }
+    }
     
     private static final int DURATION =  10;
     private static final int IMAGE_COUNT = 7;
@@ -297,6 +315,10 @@ public class ScreenManager extends AnimationTimer {
         this.user = user;
     }
     
+    public void logout() {
+        user = null;
+    }
+    
     public void setPartialReservation(Reservation partialReservation) {
         this.partialReservation = partialReservation;
     }
@@ -343,6 +365,10 @@ public class ScreenManager extends AnimationTimer {
     
     public String getReservationQuery() {
         return String.format(reservationQuery, user.getUsername());
+    }
+    
+    public String getLocationsQuery() {
+        return locationsQuery;
     }
     
     public void setReservationCardNum(String cardNum) {

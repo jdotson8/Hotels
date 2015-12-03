@@ -4,20 +4,33 @@
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
         <group>
             <file>file:/C:/Users/Administrator/Documents/Documents/_gtFall15/CS4400/Hotels/src/hotels/CancelReservationViewController.java</file>
+            <file>file:/C:/Users/Administrator/Documents/Documents/_gtFall15/CS4400/Hotels/src/hotels/Reservation.java</file>
+            <file>file:/C:/Users/Administrator/Documents/Documents/_gtFall15/CS4400/Hotels/src/hotels/ReadReviewViewController.java</file>
+            <file>file:/C:/Users/Administrator/Documents/Documents/_gtFall15/CS4400/Hotels/src/hotels/RoomReportEntry.java</file>
+            <file>file:/C:/Users/Administrator/Documents/Documents/_gtFall15/CS4400/Hotels/src/hotels/ReservationDetailsViewController.java</file>
+            <file>file:/C:/Users/Administrator/Documents/Documents/_gtFall15/CS4400/Hotels/src/hotels/RevenueReportViewController.java</file>
+            <file>file:/C:/Users/Administrator/Documents/Documents/_gtFall15/CS4400/Hotels/src/hotels/RoomReportViewController.java</file>
+            <file>file:/C:/Users/Administrator/Documents/Documents/_gtFall15/CS4400/Hotels/src/hotels/CreateReviewViewController.java</file>
+            <file>file:/C:/Users/Administrator/Documents/Documents/_gtFall15/CS4400/Hotels/src/hotels/ConfirmationViewController.java</file>
             <file>file:/C:/Users/Administrator/Documents/Documents/_gtFall15/CS4400/Hotels/src/hotels/UpdateReservationViewController.java</file>
             <file>file:/C:/Users/Administrator/Documents/Documents/_gtFall15/CS4400/Hotels/src/fxml/CancelReservationView.fxml</file>
             <file>file:/C:/Users/Administrator/Documents/Documents/_gtFall15/CS4400/Hotels/src/hotels/SelectRoomsViewController.java</file>
             <file>file:/C:/Users/Administrator/Documents/Documents/_gtFall15/CS4400/Hotels/src/hotels/SelectReservationViewController.java</file>
             <file>file:/C:/Users/Administrator/Documents/Documents/_gtFall15/CS4400/Hotels/src/hotels/LoginViewController.java</file>
+            <file>file:/C:/Users/Administrator/Documents/Documents/_gtFall15/CS4400/Hotels/src/hotels/Review.java</file>
             <file>file:/C:/Users/Administrator/Documents/Documents/_gtFall15/CS4400/Hotels/src/hotels/CustomerMenuViewController.java</file>
-            <file>file:/C:/Users/Administrator/Documents/Documents/_gtFall15/CS4400/Hotels/src/hotels/Reservation.java</file>
+            <file>file:/C:/Users/Administrator/Documents/Documents/_gtFall15/CS4400/Hotels/src/fxml/CreateReviewView.fxml</file>
+            <file>file:/C:/Users/Administrator/Documents/Documents/_gtFall15/CS4400/Hotels/src/hotels/ManagerMenuViewController.java</file>
             <file>file:/C:/Users/Administrator/Documents/Documents/_gtFall15/CS4400/Hotels/src/hotels/ScreenManager.java</file>
             <file>file:/C:/Users/Administrator/Documents/Documents/_gtFall15/CS4400/Hotels/src/hotels/PaymentViewController.java</file>
-            <file>file:/C:/Users/Administrator/Documents/Documents/_gtFall15/CS4400/Hotels/src/hotels/ReservationDetailsViewController.java</file>
+            <file>file:/C:/Users/Administrator/Documents/Documents/_gtFall15/CS4400/Hotels/src/hotels/ReservationReportViewController.java</file>
+            <file>file:/C:/Users/Administrator/Documents/Documents/_gtFall15/CS4400/Hotels/src/fxml/ReadReviewView.fxml</file>
             <file>file:/C:/Users/Administrator/Documents/Documents/_gtFall15/CS4400/Hotels/src/hotels/MakeReservationViewController.java</file>
             <file>file:/C:/Users/Administrator/Documents/Documents/_gtFall15/CS4400/Hotels/src/hotels/Hotels.java</file>
+            <file>file:/C:/Users/Administrator/Documents/Documents/_gtFall15/CS4400/Hotels/src/hotels/ResReportEntry.java</file>
             <file>file:/C:/Users/Administrator/Documents/Documents/_gtFall15/CS4400/Hotels/src/hotels/Room.java</file>
-            <file>file:/C:/Users/Administrator/Documents/Documents/_gtFall15/CS4400/Hotels/src/hotels/ConfirmationViewController.java</file>
+            <file>file:/C:/Users/Administrator/Documents/Documents/_gtFall15/CS4400/Hotels/src/fxml/RoomReportView.fxml</file>
+            <file>file:/C:/Users/Administrator/Documents/Documents/_gtFall15/CS4400/Hotels/src/hotels/RevenueReportEntry.java</file>
         </group>
     </open-files>
 </project-private>

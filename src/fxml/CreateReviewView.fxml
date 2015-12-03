@@ -1,11 +1,27 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.scene.text.*?>
 <?import java.lang.*?>
 <?import java.util.*?>
 <?import javafx.scene.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<AnchorPane id="AnchorPane" prefHeight="400.0" prefWidth="600.0" xmlns:fx="http://javafx.com/fxml/1" fx:controller="hotels.CreateReviewViewController">
-    
+<AnchorPane id="AnchorPane" fx:id="parent" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="hotels.CreateReviewViewController">
+   <children>
+      <ComboBox fx:id="locationSelect" layoutX="225.0" layoutY="73.0" prefWidth="150.0" />
+      <Label layoutX="164.0" layoutY="77.0" text="Location:" />
+      <ComboBox fx:id="ratingSelect" layoutX="225.0" layoutY="138.0" prefWidth="150.0" />
+      <Label layoutX="175.0" layoutY="142.0" text="Rating:" />
+      <Label layoutX="161.0" layoutY="200.0" text="Comment:" />
+      <TextArea fx:id="commentArea" layoutX="225.0" layoutY="200.0" prefHeight="72.0" prefWidth="200.0" wrapText="true" />
+      <Label layoutX="14.0" layoutY="14.0" text="Create Review">
+         <font>
+            <Font size="16.0" />
+         </font>
+      </Label>
+      <Label fx:id="remainingLabel" layoutX="225.0" layoutY="183.0" text="(# of  64 remaining)" textFill="#727272" />
+      <Button fx:id="submitButton" layoutX="532.0" layoutY="361.0" mnemonicParsing="false" onAction="#submitHandler" text="Submit" />
+      <Button layoutX="14.0" layoutY="361.0" mnemonicParsing="false" onAction="#backHandler" text="Button" />
+   </children>
 </AnchorPane>

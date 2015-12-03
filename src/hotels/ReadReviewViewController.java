@@ -12,10 +12,6 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.ResourceBundle;
-import javafx.beans.binding.Bindings;
-import javafx.beans.property.StringProperty;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Service;
@@ -26,8 +22,9 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
-import javafx.scene.control.Label;
-import javafx.scene.control.TextArea;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
+import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.Pane;
 
 /**
@@ -35,11 +32,11 @@ import javafx.scene.layout.Pane;
  *
  * @author Administrator
  */
-public class CreateReviewViewController implements ScreenController, Initializable {
-    private static final String reviewUpdate =
-            "INSERT INTO Hotel_Review(Location, Rating, Comment, Review_User) "
-            + "VALUES ('%s', '%s', '%s', '%s')";
-            
+public class ReadReviewViewController implements ScreenController, Initializable {
+    public static final String reviewsQuery =
+            "SELECT Rating, Comment "
+            + "FROM Hotel_Review "
+            + "WHERE Location = '%s'";
     
     @FXML
     private Pane parent;
@@ -48,20 +45,21 @@ public class CreateReviewViewController implements ScreenController, Initializab
     private ComboBox<String> locationSelect;
     
     @FXML
-    private ComboBox<String> ratingSelect;
+    private Button searchButton;
     
     @FXML
-    private TextArea commentArea;
+    private TableView reviewsTable;
     
     @FXML
-    private Button submitButton;
+    private TableColumn ratingColumn;
     
     @FXML
-    private Label remainingLabel;
+    private TableColumn commentColumn;
     
     private ScreenManager manager;
     private ObservableList<String> availableLocations;
-    
+    private ObservableList<Review> reviews;
+
     private Service<List<String>> locationsService = new Service<List<String>>() {
         @Override
         protected Task<List<String>> createTask() {
@@ -85,43 +83,42 @@ public class CreateReviewViewController implements ScreenController, Initializab
         }
     };
     
-    private class ReviewService extends Service<Void> {
+    private class ReviewsService extends Service<List<Review>> {
         private String location;
-        private String rating;
-        private String comment;
         
-        public void setReviewInfo(String location, String rating, String comment) {
+        public void setReviewsInfo(String location) {
             this.location = location;
-            this.rating = rating;
-            this.comment = comment;
         }
         
         @Override
-        protected Task<Void> createTask() {
-            return new Task<Void>() {
+        protected Task<List<Review>> createTask() {
+            return new Task<List<Review>>() {
                 @Override
-                protected Void call() throws Exception {
+                protected List<Review> call() throws Exception {
+                    List<Review> foundReviews = new ArrayList<>();
                     try (Connection con = manager.openConnection();
                         Statement s = con.createStatement();) {
-                        String update = String.format(reviewUpdate, location, rating, comment, manager.getUserUsername());
-                        s.executeUpdate(update);
-                        
+                        String query = String.format(reviewsQuery, location);
+                        ResultSet rs = s.executeQuery(query);
+                        while(rs.next()) {
+                            foundReviews.add(new Review(rs.getString(1), rs.getString(2)));
+                        }
                     } catch (Exception ex) {
                         ex.printStackTrace();
                         throw ex;
                     }
-                    return null;
+                    return foundReviews;
                 }
             };
         }         
     }
-    private ReviewService reviewService = new ReviewService();
+    private ReviewsService reviewsService = new ReviewsService();
     
     @FXML
-    private void submitHandler(ActionEvent event) {
+    private void searchHandler(ActionEvent event) {
         parent.setDisable(true);
-        reviewService.setReviewInfo(locationSelect.getValue(),ratingSelect.getValue(), commentArea.getText());
-        reviewService.restart();
+        reviewsService.setReviewsInfo(locationSelect.getValue());
+        reviewsService.restart();
     }
     
     @FXML
@@ -135,31 +132,20 @@ public class CreateReviewViewController implements ScreenController, Initializab
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         availableLocations = FXCollections.observableArrayList();
+        reviews = FXCollections.observableArrayList();
+        ratingColumn.setCellValueFactory(new PropertyValueFactory<>("rating"));
+        commentColumn.setCellValueFactory(new PropertyValueFactory<>("comment"));
         locationSelect.setItems(availableLocations);
-        ratingSelect.setItems(FXCollections.observableArrayList("Excelent", "Good", "Neutral", "Bad", "Very Bad"));
-        submitButton.disableProperty().bind(Bindings.createBooleanBinding(() -> 
-            locationSelect.getValue() == null ||
-            ratingSelect.getValue() == null,
-        locationSelect.valueProperty(), ratingSelect.valueProperty()));
-        commentArea.textProperty().addListener(new ChangeListener<String>() {
-            @Override
-            public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
-                if (newValue.length() > 64) {
-                    ((StringProperty)observable).setValue(oldValue);
-                }
-            }
-        });
-        remainingLabel.textProperty().bind(Bindings.createStringBinding(() -> 
-            String.format("(%d of 64 remaining.)", 64 - commentArea.getText().length()), commentArea.textProperty()));
+        reviewsTable.setItems(reviews);
         
         locationsService.setOnSucceeded((final WorkerStateEvent event) -> {
             parent.setDisable(false);
             availableLocations.setAll((List<String>)event.getSource().getValue());
         });
         
-        reviewService.setOnSucceeded((final WorkerStateEvent event) -> {
+        reviewsService.setOnSucceeded((final WorkerStateEvent event) -> {
             parent.setDisable(false);
-            manager.setScreen("CustomerMenuView", null);
+            reviews.setAll((List<Review>)event.getSource().getValue());
         });
     }    
 
@@ -170,14 +156,12 @@ public class CreateReviewViewController implements ScreenController, Initializab
 
     @Override
     public void cleanUp() {
-       locationSelect.setValue(null);
-       ratingSelect.setValue(null);
-       commentArea.setText("");
+        locationSelect.setValue(null);
+        reviews.clear();
     }
 
     @Override
     public void setManager(ScreenManager manager) {
         this.manager = manager;
     }
-    
 }

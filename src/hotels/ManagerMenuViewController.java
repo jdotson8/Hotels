@@ -13,6 +13,7 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.layout.Pane;
 
 /**
  * FXML Controller class
@@ -20,34 +21,33 @@ import javafx.scene.control.Label;
  * @author Administrator
  */
 public class ManagerMenuViewController implements ScreenController, Initializable {
+    @FXML
+    private Pane parent;
+    
     @FXML 
     private Label welcomeLabel;
-    
-    
-    @FXML
-    private Button viewResReportButton;
-    
-    @FXML
-    private Button viewPopRoomButton;
-    
-    @FXML
-    private Button viewRevenueButton;
     
     private ScreenManager manager;
     
     @FXML
     private void viewResHandler(ActionEvent event) {
-        // TODO
+        manager.setScreen("ReservationReportView", null);
     }
     
     @FXML
     private void viewPopRoomHandler(ActionEvent event) {
-        // TODO
+        manager.setScreen("RoomReportView", null);
     }
     
     @FXML
     private void viewRevenueHandler(ActionEvent event) {
-        // TODO
+        manager.setScreen("RevenueReportView", null);
+    }
+    
+    @FXML
+    private void logoutHandler(ActionEvent event) {
+        manager.logout();
+        manager.setScreen("LoginView", null);
     }
     
     /**
@@ -61,6 +61,7 @@ public class ManagerMenuViewController implements ScreenController, Initializabl
     @Override
     public void onSet(List arguments) {
         welcomeLabel.setText(String.format("Welcome %s,", manager.getUserUsername()));
+        parent.setDisable(false);
     }
     
     @Override

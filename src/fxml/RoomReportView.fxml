@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.text.*?>
+<?import java.lang.*?>
+<?import java.util.*?>
+<?import javafx.scene.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<AnchorPane id="AnchorPane" fx:id="parent" prefHeight="435.0" prefWidth="723.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="hotels.RoomReportViewController">
+   <children>
+      <TableView fx:id="reportTable" layoutX="59.0" layoutY="107.0" prefHeight="267.0" prefWidth="606.0">
+        <columns>
+          <TableColumn fx:id="locationColumn" prefWidth="228.0" text="Location" />
+            <TableColumn fx:id="typeColumn" prefWidth="214.0" text="Type" />
+          <TableColumn fx:id="reservationsColumn" prefWidth="189.0" text="Reservations" />
+        </columns>
+         <columnResizePolicy>
+            <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
+         </columnResizePolicy>
+      </TableView>
+      <ComboBox fx:id="monthSelect" layoutX="59.0" layoutY="65.0" prefWidth="150.0" />
+      <Label layoutX="59.0" layoutY="48.0" text="Month:" />
+      <Label layoutX="14.0" layoutY="14.0" text="Popular Room Type">
+         <font>
+            <Font size="16.0" />
+         </font>
+      </Label>
+      <Button layoutX="14.0" layoutY="396.0" mnemonicParsing="false" onAction="#backHandler" text="Back" />
+      <Button fx:id="reportButton" layoutX="218.0" layoutY="65.0" mnemonicParsing="false" onAction="#reportHandler" text="Get Report" />
+   </children>
+</AnchorPane>

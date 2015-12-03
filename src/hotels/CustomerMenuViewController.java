@@ -63,12 +63,18 @@ public class CustomerMenuViewController implements ScreenController, Initializab
     
     @FXML
     private void createReviewHandler(ActionEvent event) {
-        // TODO
+        manager.setScreen("CreateReviewView", null);
     }
     
     @FXML
     private void readReviewsHandler(ActionEvent event) {
-        // TODO
+        manager.setScreen("ReadReviewView", null);
+    }
+    
+    @FXML
+    private void logoutHandler(ActionEvent event) {
+        manager.logout();
+        manager.setScreen("LoginView", null);
     }
 
     /**

@@ -55,10 +55,6 @@ import javafx.util.StringConverter;
  * @author Administrator
  */
 public class MakeReservationViewController implements ScreenController, Initializable {
-    private static String locationsQuery =
-            "SELECT DISTINCT Room_Location "
-            + "FROM Room;";
-    
     private static String roomSearchQuery = 
             "SELECT Room_Num, Room_Categ, Num_People, Cost_Per_Day, Extra_Bed_Cost "
             + "FROM Room "
@@ -122,7 +118,7 @@ public class MakeReservationViewController implements ScreenController, Initiali
                     List<String> locations = new ArrayList<String>();
                     try (Connection con = manager.openConnection();
                         Statement s = con.createStatement();) {
-                        String query = locationsQuery;
+                        String query = manager.getLocationsQuery();
                         ResultSet rs = s.executeQuery(query);
                         while (rs.next()) {
                             locations.add(rs.getString(1));
@@ -183,12 +179,9 @@ public class MakeReservationViewController implements ScreenController, Initiali
     
     @FXML
     private void searchRoomsHandler(ActionEvent event) {
-        if (startDateSelect.getValue() == null && endDateSelect.getValue() == null) {
-            //Nothing for now.
-        } else {
-            searchService.setSearchInfo(locationSelect.getValue(), startDateSelect.getValue(), endDateSelect.getValue());
-            searchService.restart();
-        }
+        parent.setDisable(true);
+        searchService.setSearchInfo(locationSelect.getValue(), startDateSelect.getValue(), endDateSelect.getValue());
+        searchService.restart();
     }
     
     @FXML
@@ -280,6 +273,7 @@ public class MakeReservationViewController implements ScreenController, Initiali
         });
         
         searchService.setOnSucceeded((final WorkerStateEvent event) -> {
+            parent.setDisable(false);
             List<Room> rooms = (List<Room>)event.getSource().getValue();
             availableRooms.setAll(rooms);
             Observable[] dependencies = new BooleanProperty[rooms.size()];
